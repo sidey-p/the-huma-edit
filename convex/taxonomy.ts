@@ -33,3 +33,20 @@ export const getCornerBySlug = query({
       .unique();
   },
 });
+
+/** Topics attached to one article (article detail page chips). */
+export const listTopicsForArticle = query({
+  args: { articleId: v.id("articles") },
+  handler: async (ctx, args) => {
+    const joins = await ctx.db
+      .query("articleTopics")
+      .withIndex("by_article", (q) => q.eq("articleId", args.articleId))
+      .collect();
+    const topics = await Promise.all(
+      joins.map((j) => ctx.db.get(j.topicId)),
+    );
+    return topics
+      .filter((t): t is NonNullable<typeof t> => t !== null)
+      .map((t) => ({ _id: t._id, slug: t.slug, name: t.name }));
+  },
+});

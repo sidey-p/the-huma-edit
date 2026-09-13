@@ -46,3 +46,8 @@ convex-dev.log
 next-dev.log
 .vercel
 .env*
+
+# Playwright artifacts
+screenshots/
+test-results/
+playwright-report/

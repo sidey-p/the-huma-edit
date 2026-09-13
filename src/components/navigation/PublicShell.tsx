@@ -1,7 +1,7 @@
 import { SiteHeader } from "@/components/navigation/SiteHeader";
 import { SiteFooter } from "@/components/navigation/SiteFooter";
 
-/** Public chrome: header + footer around reader-facing pages (§25). */
+/** Public chrome: masthead + footer around reader-facing pages (§25). */
 export function PublicShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">

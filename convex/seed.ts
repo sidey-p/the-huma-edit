@@ -107,6 +107,8 @@ export const insertSampleArticles = internalMutation({
         etymology: v.string(),
         relatedWords: v.array(v.string()),
         conversationExamples: v.array(v.string()),
+        sourceArticleSlug: v.optional(v.string()),
+        commonMistakes: v.optional(v.string()),
       }),
     ),
   },
@@ -248,6 +250,10 @@ export const insertSampleArticles = internalMutation({
         .query("vocabularyWords")
         .withIndex("by_word", (q) => q.eq("word", w.word))
         .unique();
+      // Link word to its source article when a slug is provided (§18.2)
+      const sourceArticleId = w.sourceArticleSlug
+        ? (articleIdBySlug.get(w.sourceArticleSlug) as string | undefined)
+        : undefined;
       if (!existingWord) {
         await ctx.db.insert("vocabularyWords", {
           word: w.word,
@@ -256,8 +262,12 @@ export const insertSampleArticles = internalMutation({
           plainMeaning: w.plainMeaning,
           usageExample: w.usageExample,
           etymology: w.etymology,
+          commonMistakes: w.commonMistakes,
           relatedWords: w.relatedWords,
           conversationExamples: w.conversationExamples,
+          ...(sourceArticleId
+            ? { sourceArticleId: sourceArticleId as never }
+            : {}),
           createdAt: now,
           updatedAt: now,
         });
@@ -317,6 +327,9 @@ export const purgeSampleContent = internalMutation({
       for (const s of steps) await ctx.db.delete(s._id);
       await ctx.db.delete(path._id);
     }
+    // Remove seeded vocabulary (it references sample articles)
+    const words = await ctx.db.query("vocabularyWords").collect();
+    for (const w of words) await ctx.db.delete(w._id);
     return samples.length;
   },
 });

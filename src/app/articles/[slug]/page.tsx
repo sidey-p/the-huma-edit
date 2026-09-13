@@ -21,11 +21,50 @@ export default async function ArticlePage({
 
   if (!article) notFound();
 
+  const [wordsToNotice, topics] = await Promise.all([
+    fetchQuery(api.vocabulary.listByArticle, {
+      articleId: article._id as never,
+    }),
+    fetchQuery(api.taxonomy.listTopicsForArticle, {
+      articleId: article._id as never,
+    }),
+  ]);
+
   const corner = article.corners.find((c) => c) ?? null;
-  const ogImage = undefined; // cover assets come with Sprint 2 media
+
+  // §29 SEO: JSON-LD structured data for rich article results.
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    description: article.seoDescription ?? article.dek ?? undefined,
+    datePublished: article.publishedAt
+      ? new Date(article.publishedAt).toISOString()
+      : undefined,
+    dateModified: new Date(article.updatedAt).toISOString(),
+    author: article.author
+      ? {
+          "@type": "Person",
+          name: article.author.displayName,
+          ...(article.author.slug
+            ? { url: `/authors/${article.author.slug}` }
+            : {}),
+        }
+      : undefined,
+    publisher: {
+      "@type": "Organization",
+      name: "The Human Edit",
+    },
+    isAccessibleForFree: true,
+    inLanguage: "en",
+  };
 
   return (
     <PublicShell>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <ReadingProgressTracker articleId={article._id} />
       <article data-reading-theme="light" className="w-full bg-white">
         {/* 7.2 Article header */}
@@ -43,6 +82,20 @@ export default async function ArticlePage({
             <p className="mt-4 font-display text-xl italic text-ink-muted">
               {article.dek}
             </p>
+          )}
+          {/* Topic chips — related ideas between header and body (§5.7) */}
+          {topics.length > 0 && (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {topics.map((t) => (
+                <Link
+                  key={t._id}
+                  href={`/search?q=${encodeURIComponent(t.name)}`}
+                  className="rounded-editorial-sm border border-line px-2.5 py-1 text-xs text-ink-muted transition-colors hover:border-line-strong hover:text-ink"
+                >
+                  {t.name}
+                </Link>
+              ))}
+            </div>
           )}
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
             <div className="meta-line flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -86,6 +139,49 @@ export default async function ArticlePage({
         <div className="mx-auto flex max-w-5xl gap-12 px-4 pb-24 sm:px-6">
           <div className="mx-auto max-w-3xl min-w-0">
             <ArticleBody doc={article.contentJson as never} />
+
+            {/* §18.2 Words to notice — vocabulary from this article */}
+            {wordsToNotice.length > 0 && (
+              <aside
+                aria-labelledby="words-to-notice"
+                className="mt-16 border-t border-line pt-8"
+              >
+                <h2
+                  id="words-to-notice"
+                  className="meta-line font-medium"
+                  style={{ color: "var(--gold)" }}
+                >
+                  Words to notice
+                </h2>
+                <ul className="mt-4 space-y-4">
+                  {wordsToNotice.map((w) => (
+                    <li key={w._id}>
+                      <Link
+                        href="/english/vocabulary"
+                        className="group flex flex-wrap items-baseline gap-x-2"
+                      >
+                        <span className="font-display text-lg transition-colors group-hover:text-accent">
+                          {w.word}
+                        </span>
+                        {w.partOfSpeech && (
+                          <span className="meta-line italic">
+                            {w.partOfSpeech}
+                          </span>
+                        )}
+                        <span className="text-sm text-ink-muted">
+                          — {w.plainMeaning}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                <p className="meta-line mt-5">
+                  <Link href="/english/vocabulary" className="ink-link">
+                    More words worth keeping →
+                  </Link>
+                </p>
+              </aside>
+            )}
           </div>
           <ArticleContents />
         </div>
@@ -161,6 +257,15 @@ export async function generateMetadata({
       publishedTime: article.publishedAt
         ? new Date(article.publishedAt).toISOString()
         : undefined,
+      authors: article.author
+        ? [`/authors/${article.author.slug ?? ""}`]
+        : undefined,
+      siteName: "The Human Edit",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.title,
+      description: article.seoDescription ?? article.dek ?? undefined,
     },
   };
 }

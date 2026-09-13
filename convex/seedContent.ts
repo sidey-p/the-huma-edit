@@ -555,6 +555,7 @@ export const READING_PATH = {
 export const VOCABULARY = [
   {
     word: "serendipity",
+    sourceArticleSlug: "reading-your-way-to-better-english",
     pronunciation: "seh-run-DIP-ih-tee",
     partOfSpeech: "noun",
     plainMeaning:
@@ -563,14 +564,16 @@ export const VOCABULARY = [
       "I went out for bread and came home with a best friend - pure serendipity.",
     etymology:
       "From the Persian tale of the Three Princes of Serendip, who made discoveries by accident - and had the wisdom to notice them.",
+    commonMistakes:
+      "Often confused with luck; serendipity specifically means a happy accident while seeking something else.",
     relatedWords: ["fluke", "happenstance", "windfall"],
     conversationExamples: [
       "It was complete serendipity - the book was lying on the seat next to mine.",
-      "If you keep your eyes soft, travel is mostly serendipity.",
     ],
   },
   {
     word: "petrichor",
+    sourceArticleSlug: "words-that-dont-translate",
     pronunciation: "PET-ri-kor",
     partOfSpeech: "noun",
     plainMeaning: "the smell of rain on dry earth",
@@ -586,6 +589,7 @@ export const VOCABULARY = [
   },
   {
     word: "sonder",
+    sourceArticleSlug: "what-the-tide-left",
     pronunciation: "SON-der",
     partOfSpeech: "noun",
     plainMeaning:
@@ -596,6 +600,55 @@ export const VOCABULARY = [
     relatedWords: ["empathy", "perspective"],
     conversationExamples: [
       "I had a moment of sonder in the airport - all these people with mothers and Thursdays.",
+    ],
+  },
+  {
+    word: "apricity",
+    sourceArticleSlug: "words-that-dont-translate",
+    pronunciation: "a-PRISS-ih-tee",
+    partOfSpeech: "noun",
+    plainMeaning: "the warmth of the sun in winter",
+    usageExample:
+      "There is a word for this - apricity - the sun's kindness in the coldest months.",
+    etymology: "From Latin apricus, warmed by the sun. Rare, but real.",
+    commonMistakes: "Not related to apricot - the resemblance is a coincidence.",
+    relatedWords: ["winter sun", "warmth"],
+    conversationExamples: [
+      "Stand here a minute - pure apricity.",
+    ],
+  },
+  {
+    word: "perfunctory",
+    sourceArticleSlug: "the-speed-of-modern-attention",
+    pronunciation: "per-FUNK-tuh-ree",
+    partOfSpeech: "adjective",
+    plainMeaning:
+      "done without real care or interest, as a routine or duty",
+    usageExample:
+      "He gave a perfunctory nod and went back to his phone.",
+    etymology: "From Latin perfungi, to get through with, to be done with.",
+    commonMistakes:
+      "Does not mean rude - a perfunctory greeting is quick and careless, not hostile.",
+    relatedWords: ["cursory", "offhand", "mechanical"],
+    conversationExamples: [
+      "A perfunctory 'how are you' does not expect an answer.",
+      "The review felt perfunctory - two sentences and a star.",
+    ],
+  },
+  {
+    word: "salience",
+    sourceArticleSlug: "how-people-actually-change",
+    pronunciation: "SAY-lee-ence",
+    partOfSpeech: "noun",
+    plainMeaning:
+      "the quality of standing out and demanding attention",
+    usageExample:
+      "The salience of a habit cue matters more than the strength of your willpower.",
+    etymology: "From Latin salire, to leap. What salient does - leaps at you.",
+    commonMistakes: "Salient points leap out; they are not merely important.",
+    relatedWords: ["prominence", "noticeability"],
+    conversationExamples: [
+      "Make the cue salient - put the guitar where the couch used to be.",
     ],
   },
 ];

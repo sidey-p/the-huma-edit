@@ -1,73 +1,67 @@
 import Link from "next/link";
+import { SiteScripts } from "@/components/site/SiteScripts";
 
 /**
- * §06.1 — Compact editorial header. Avoid a huge persistent nav bar.
- * Vocabulary: Explore, Corners, Paths, Library (§2.7).
+ * §06.1 — Editorial masthead. Wordmark + primary nav + quiet icon
+ * actions. Vocabulary: Explore, Corners, Paths, Library (§2.7).
  */
 export function SiteHeader() {
   return (
-    <header className="border-b border-line">
-      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
-        <div className="flex items-center gap-6">
-          <Link
-            href="/"
-            className="font-display text-lg font-medium tracking-tight"
-          >
+    <>
+      <SiteScripts />
+      <header className="masthead">
+        <div className="wrap masthead-row">
+          <Link href="/" className="wordmark">
             The Human Edit
+            <small>BY HUMANS. FOR HUMANS.</small>
           </Link>
-          <nav aria-label="Primary" className="hidden items-center gap-5 md:flex">
-            <HeaderLink href="/explore">Explore</HeaderLink>
-            <HeaderLink href="/corners">Corners</HeaderLink>
-            <HeaderLink href="/paths">Paths</HeaderLink>
-            <HeaderLink href="/library">Library</HeaderLink>
+
+          <nav className="primary-nav" aria-label="Primary">
+            <Link href="/explore">Explore</Link>
+            <Link href="/corners">Corners</Link>
+            <Link href="/paths">Paths</Link>
+            <Link href="/library">Library</Link>
           </nav>
-        </div>
-        <div className="flex items-center gap-3">
-          <SearchTrigger />
-          <Link
-            href="/settings"
-            className="text-sm text-ink-muted transition-colors hover:text-ink"
-          >
-            Account
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
-}
 
-function HeaderLink({ href, children }: { href: string; children: string }) {
-  return (
-    <Link
-      href={href}
-      className="text-sm text-ink-muted transition-colors hover:text-ink"
-    >
-      {children}
-    </Link>
-  );
-}
-
-function SearchTrigger() {
-  return (
-    <Link
-      href="/search"
-      aria-label="Explore Search"
-      className="flex items-center gap-2 rounded-editorial border border-line px-3 py-1.5 text-sm text-ink-muted transition-colors hover:border-line-strong hover:text-ink"
-    >
-      <svg
-        aria-hidden="true"
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      >
-        <circle cx="11" cy="11" r="7" />
-        <path d="m20 20-3.5-3.5" />
-      </svg>
-      <span className="hidden sm:inline">Ask naturally</span>
-    </Link>
+          <div className="head-actions">
+            <Link
+              href="/search"
+              className="icon-btn"
+              aria-label="Explore Search"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <line x1="21" y1="21" x2="16.6" y2="16.6" />
+              </svg>
+            </Link>
+            {/* theme-toggle button rendered by SiteScripts */}
+            <Link href="/settings" className="icon-btn" aria-label="Account">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="8" r="3.4" />
+                <path d="M4.5 20c1.4-3.4 4.2-5.2 7.5-5.2s6.1 1.8 7.5 5.2" />
+              </svg>
+            </Link>
+            {/* nav-toggle button rendered by SiteScripts */}
+          </div>
+        </div>
+      </header>
+    </>
   );
 }

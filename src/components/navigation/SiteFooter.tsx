@@ -5,70 +5,53 @@ import Link from "next/link";
  */
 export function SiteFooter() {
   return (
-    <footer className="mt-24 border-t border-line">
-      <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
-        <p className="brand-statement text-sm text-ink">
-          The Human Edit
-        </p>
-        <p className="meta-line mt-2">By humans. For humans.</p>
-
-        <div className="mt-8 grid grid-cols-2 gap-8 text-sm sm:grid-cols-4">
-          <FooterColumn title="Publication">
-            <FooterLink href="/about">About</FooterLink>
-            <FooterLink href="/archive">Archive</FooterLink>
-            <FooterLink href="/corners">Corners</FooterLink>
-            <FooterLink href="/authors">Authors</FooterLink>
-          </FooterColumn>
-          <FooterColumn title="Principles">
-            <FooterLink href="/editorial-policy">Editorial policy</FooterLink>
-            <FooterLink href="/human-authorship">Human authorship</FooterLink>
-          </FooterColumn>
-          <FooterColumn title="Reader">
-            <FooterLink href="/library">Library</FooterLink>
-            <FooterLink href="/paths">Reading Paths</FooterLink>
-            <FooterLink href="/settings">Settings</FooterLink>
-          </FooterColumn>
-          <FooterColumn title="Legal">
-            <FooterLink href="/privacy">Privacy</FooterLink>
-            <FooterLink href="/terms">Terms</FooterLink>
-            <FooterLink href="/accessibility">Accessibility</FooterLink>
-          </FooterColumn>
+    <footer className="site-footer">
+      <div className="wrap">
+        <div className="footer-top">
+          <div>
+            <div className="footer-wordmark">The Human Edit</div>
+            <p className="footer-tag">By humans. For humans.</p>
+          </div>
+          <div className="footer-cols">
+            <div>
+              <h5>Publication</h5>
+              <ul>
+                <li><Link href="/about">About</Link></li>
+                <li><Link href="/archive">Archive</Link></li>
+                <li><Link href="/corners">Corners</Link></li>
+                <li><Link href="/authors">Authors</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h5>Principles</h5>
+              <ul>
+                <li><Link href="/editorial-policy">Editorial policy</Link></li>
+                <li><Link href="/human-authorship">Human authorship</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h5>Reader</h5>
+              <ul>
+                <li><Link href="/library">Library</Link></li>
+                <li><Link href="/paths">Reading paths</Link></li>
+                <li><Link href="/settings">Settings</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h5>Legal</h5>
+              <ul>
+                <li><Link href="/privacy">Privacy</Link></li>
+                <li><Link href="/terms">Terms</Link></li>
+                <li><Link href="/accessibility">Accessibility</Link></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          <span>© 2026 The Human Edit.</span>
+          <span>Every word on this site was written by a person.</span>
         </div>
       </div>
     </footer>
-  );
-}
-
-function FooterColumn({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <h2 className="meta-line mb-3 font-medium">{title}</h2>
-      <ul className="space-y-2">{children}</ul>
-    </div>
-  );
-}
-
-function FooterLink({
-  href,
-  children,
-}: {
-  href: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <li>
-      <Link
-        href={href}
-        className="text-ink-muted transition-colors hover:text-ink"
-      >
-        {children}
-      </Link>
-    </li>
   );
 }
