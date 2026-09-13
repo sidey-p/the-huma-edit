@@ -44,3 +44,5 @@ next-env.d.ts
 .convex/
 convex-dev.log
 next-dev.log
+.vercel
+.env*
