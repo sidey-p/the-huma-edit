@@ -1,0 +1,73 @@
+/* Writer Desk editor typography - mirrors the reading experience (§12.3) */
+
+.writer-prose {
+  font-family: var(--font-reading);
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--ink);
+  min-height: 60vh;
+}
+
+.writer-prose .tiptap {
+  outline: none;
+}
+
+.writer-prose p {
+  margin-block: 1rem;
+}
+
+.writer-prose h1, .writer-prose h2, .writer-prose h3 {
+  font-family: var(--font-display);
+  line-height: 1.25;
+  margin-block: 2rem 0.75rem;
+  text-wrap: balance;
+}
+
+.writer-prose h1 { font-size: 2rem; }
+.writer-prose h2 { font-size: 1.5rem; }
+.writer-prose h3 { font-size: 1.25rem; }
+
+.writer-prose blockquote {
+  font-style: italic;
+  border-left: 2px solid var(--accent);
+  padding-left: 1.25rem;
+  margin-block: 1.5rem;
+  color: var(--ink-muted);
+}
+
+.writer-prose ul, .writer-prose ol {
+  padding-left: 1.5rem;
+  margin-block: 1rem;
+}
+
+.writer-prose ul { list-style: disc; }
+.writer-prose ol { list-style: decimal; }
+
+.writer-prose hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin-block: 2rem;
+}
+
+.writer-prose code {
+  background: var(--paper-sunken);
+  border-radius: var(--radius-sm);
+  padding: 0.1em 0.35em;
+  font-size: 0.9em;
+}
+
+.writer-prose pre {
+  background: var(--paper-sunken);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.writer-prose p.is-editor-empty:first-child::before {
+  color: var(--ink-faint);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
