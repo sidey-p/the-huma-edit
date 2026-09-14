@@ -1,59 +1,139 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/browser";
 import { ThemeProvider } from "./ThemeProvider";
 
 /**
- * Site-wide interaction layer — port of the reference main.js:
- * splash loader, scroll-reveal, masthead condense, theme toggle
- * with ripple, cursor accent, mobile nav. Every animation is
- * triggered by a real event; nothing loops except the hero "live" dot.
+ * Site-wide interaction layer (invisible behaviors only):
+ * - FIRST EVER visit on a big page (home, explore, sign-up): full brand
+ *   splash, one time only (localStorage).
+ * - Repeat visits on big pages: quick spinner + random quote.
+ * - NEVER on article/browsing/reading pages: instant load.
+ * - Scroll-reveal, masthead condense, outside-tap close, cursor dot.
+ *
+ * Visible header controls (ThemeToggle, MobileNav) are exported
+ * separately and placed inside the masthead action row.
  */
 export function SiteScripts() {
   return (
     <>
       <ThemeProvider />
-      <Splash />
+      <FirstLoad />
       <Reveal />
       <MastheadCondense />
-      <ThemeToggle />
       <CursorDot />
-      <MobileNav />
+      <OutsideTapClose />
     </>
   );
 }
 
-function Splash() {
+const QUOTES = [
+  "A word after a word after a word is power.",
+  "Read. Sit. Drink. And think not much of time.",
+  "The reader lives a thousand lives before he dies.",
+  "We read to know we are not alone.",
+  "Books are quiet gardens of the mind.",
+  "Every story begins somewhere small.",
+  "Patience is the companion of wisdom.",
+  "The best time to read was yesterday. The next best is now.",
+  "A quiet page is a loud world.",
+];
+
+/** Big-task pages that earn the first-visit splash / quote spinner. */
+function isBigPage(path: string) {
+  if (
+    path.startsWith("/articles/") ||
+    path.startsWith("/corners/") ||
+    path.startsWith("/topics/") ||
+    path.startsWith("/authors/") ||
+    path.startsWith("/paths/") ||
+    path.startsWith("/studio/") ||
+    path === "/library" ||
+    path === "/settings"
+  ) {
+    return false;
+  }
+  return true; // home, explore, search, archive, sign-in: the big moments
+}
+
+function FirstLoad() {
+  const [quote, setQuote] = useState<string | null>(null);
+  const [showSplash, setShowSplash] = useState(false);
+  const [showSpinner, setShowSpinner] = useState(false);
+  const decided = useRef(false);
+
   useEffect(() => {
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-    const splash = document.getElementById("splash");
-    if (!splash) return;
-    const hide = () => splash.setAttribute("data-hidden", "true");
-    // Give the wordmark animation time to land, then lift the curtain.
-    const t1 = window.setTimeout(hide, reduceMotion ? 0 : 1350);
-    // Never trap a user behind the splash if something goes wrong.
-    const t2 = window.setTimeout(hide, 4000);
+    if (decided.current) return;
+    decided.current = true;
+
+    const path = window.location.pathname;
+    if (!isBigPage(path)) return; // reading/browsing: instant, no overlay
+
+    let seen = false;
+    try {
+      seen = localStorage.getItem("hume-visited") === "1";
+    } catch {}
+
+    const reduceMotion =
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (reduceMotion) {
+      try {
+        localStorage.setItem("hume-visited", "1");
+      } catch {}
+      return; // reduced motion: never block the reader
+    }
+
+    if (!seen) {
+      // First ever visit: full brand splash, then never again.
+      try {
+        localStorage.setItem("hume-visited", "1");
+      } catch {}
+      setShowSplash(true);
+      const t = window.setTimeout(() => setShowSplash(false), 1500);
+      const t2 = window.setTimeout(() => setShowSplash(false), 3600);
+      return () => {
+        clearTimeout(t);
+        clearTimeout(t2);
+      };
+    }
+
+    // Repeat visits: quick spinner + rotating quote.
+    setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
+    setShowSpinner(true);
+    const t = window.setTimeout(() => setShowSpinner(false), 750);
+    const t2 = window.setTimeout(() => setShowSpinner(false), 2000);
     return () => {
-      clearTimeout(t1);
+      clearTimeout(t);
       clearTimeout(t2);
     };
   }, []);
 
   return (
-    <div id="splash" aria-hidden="true">
-      <div>
-        <div className="splash-mark" aria-hidden="true">
-          {"The Human Edit".split("").map((ch, i) => (
-            <span key={i} style={{ ["--i" as string]: i }}>
-              {ch === " " ? "\u00A0" : ch}
-            </span>
-          ))}
+    <>
+      {showSplash && (
+        <div id="splash" aria-hidden="true">
+          <div>
+            <div className="splash-mark" aria-hidden="true">
+              {"The Human Edit".split("").map((ch, i) => (
+                <span key={i} style={{ ["--i" as string]: i }}>
+                  {ch === " " ? "\u00A0" : ch}
+                </span>
+              ))}
+            </div>
+            <div className="splash-rule" />
+          </div>
         </div>
-        <div className="splash-rule" />
-      </div>
-    </div>
+      )}
+      {showSpinner && (
+        <div id="quote-loader" aria-hidden="true">
+          <div className="quote-spinner" />
+          {quote && <p className="quote-text">{quote}</p>}
+        </div>
+      )}
+    </>
   );
 }
 
@@ -63,7 +143,6 @@ function Reveal() {
       "(prefers-reduced-motion: reduce)"
     ).matches;
 
-    // Stagger children of any [data-stagger] container.
     document.querySelectorAll<HTMLElement>("[data-stagger]").forEach((group) => {
       Array.from(group.children).forEach((child, i) => {
         const el = child as HTMLElement;
@@ -137,35 +216,41 @@ function rippleFrom(el: HTMLElement) {
   window.setTimeout(() => dot.remove(), 700);
 }
 
-function ThemeToggle() {
-  useEffect(() => {
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-    const btn = document.getElementById("theme-toggle");
-    if (!btn) return;
+export function toggleTheme(el?: HTMLElement | null) {
+  const root = document.documentElement;
+  const current = root.getAttribute("data-theme");
+  const next = current === "dark" ? "light" : "dark";
+  try {
+    localStorage.setItem("hume-theme", next);
+  } catch {}
+  root.setAttribute("data-theme", next);
+  root.setAttribute("data-theme-mode", next);
+  root.style.colorScheme = next;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!reduceMotion && el) rippleFrom(el);
+  // Signed-in users: persist so the preference roams across devices.
+  void createClient()
+    .auth.getUser()
+    .then(({ data: { user } }) => {
+      if (!user) return;
+      void createClient()
+        .from("reader_preferences")
+        .upsert({
+          user_id: user.id,
+          site_theme: next,
+          updated_at: new Date().toISOString(),
+        });
+    });
+}
 
-    const onClick = (e: Event) => {
-      const root = document.documentElement;
-      const current = root.getAttribute("data-theme");
-      const next = current === "dark" ? "light" : "dark";
-      try {
-        localStorage.setItem("hume-theme", next);
-      } catch {}
-      root.setAttribute("data-theme", next);
-      root.setAttribute("data-theme-mode", next);
-      if (!reduceMotion) rippleFrom(e.currentTarget as HTMLElement);
-    };
-    btn.addEventListener("click", onClick);
-    return () => btn.removeEventListener("click", onClick);
-  }, []);
-
+/** Sun/moon day-dial. Rendered inside the masthead action row. */
+export function ThemeToggle() {
   return (
     <button
       className="icon-btn theme-toggle"
-      id="theme-toggle"
       aria-label="Toggle dark and light mode"
       type="button"
+      onClick={(e) => toggleTheme(e.currentTarget)}
     >
       <svg
         className="sun"
@@ -211,16 +296,14 @@ function CursorDot() {
       dot.classList.add("active");
     };
     const onLeave = () => dot.classList.remove("active");
-    const onEnter = () => dot.classList.add("grow");
-    const onExit = () => dot.classList.remove("grow");
+    const onOver = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      if (t.closest("a, button")) dot.classList.add("grow");
+      else dot.classList.remove("grow");
+    };
 
     window.addEventListener("mousemove", onMove);
     document.addEventListener("mouseleave", onLeave);
-    const onOver = (e: MouseEvent) => {
-      const t = e.target as HTMLElement;
-      if (t.closest("a, button")) onEnter();
-      else onExit();
-    };
     document.addEventListener("mouseover", onOver);
 
     return () => {
@@ -234,41 +317,101 @@ function CursorDot() {
   return null;
 }
 
-function MobileNav() {
-  useEffect(() => {
-    const navToggle = document.querySelector<HTMLButtonElement>(".nav-toggle");
-    const nav = document.querySelector<HTMLElement>(".primary-nav");
-    if (!navToggle || !nav) return;
-
-    const onClick = () => {
-      const open = nav.getAttribute("data-open") === "true";
-      nav.setAttribute("data-open", String(!open));
-      navToggle.setAttribute("aria-expanded", String(!open));
-    };
-    navToggle.addEventListener("click", onClick);
-    return () => navToggle.removeEventListener("click", onClick);
-  }, []);
+/**
+ * Hamburger + slide-down panel. Phones only (CSS hides the button on
+ * larger screens). The panel anchors to the sticky masthead.
+ */
+export function MobileNav() {
+  const [open, setOpen] = useState(false);
 
   return (
-    <button
-      className="icon-btn nav-toggle"
-      aria-label="Open menu"
-      aria-expanded="false"
-      type="button"
-    >
-      <svg
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
+    <>
+      <button
+        className="icon-btn nav-toggle"
+        aria-label="Open menu"
+        aria-expanded={open}
+        type="button"
+        onClick={() => setOpen(!open)}
       >
-        <line x1="3" y1="6" x2="21" y2="6" />
-        <line x1="3" y1="12" x2="21" y2="12" />
-        <line x1="3" y1="18" x2="21" y2="18" />
-      </svg>
-    </button>
+        {open ? (
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          >
+            <line x1="5" y1="5" x2="19" y2="19" />
+            <line x1="19" y1="5" x2="5" y2="19" />
+          </svg>
+        ) : (
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          >
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        )}
+      </button>
+      {open && (
+        <nav className="primary-nav" data-open="true" aria-label="Mobile">
+          <Link href="/explore" onClick={() => setOpen(false)}>Explore</Link>
+          <Link href="/corners" onClick={() => setOpen(false)}>Corners</Link>
+          <Link href="/paths" onClick={() => setOpen(false)}>Paths</Link>
+          <Link href="/library" onClick={() => setOpen(false)}>Library</Link>
+          <Link href="/archive" onClick={() => setOpen(false)}>Archive</Link>
+          <Link href="/search" onClick={() => setOpen(false)}>Search</Link>
+          <Link href="/settings" onClick={() => setOpen(false)}>Account</Link>
+        </nav>
+      )}
+    </>
   );
+}
+
+/** Closes any open popover when tapping outside it. */
+function OutsideTapClose() {
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      // appearance panel + notification panel + mobile menu
+      if (!t.closest(".appearance-host")) {
+        document
+          .querySelectorAll(".appearance-pop")
+          .forEach((el) => el.setAttribute("hidden", ""));
+        document
+          .querySelectorAll('[data-appearance-open="true"]')
+          .forEach((el) => el.setAttribute("data-appearance-open", "false"));
+      }
+      if (!t.closest(".notif-host")) {
+        document
+          .querySelectorAll(".notif-panel")
+          .forEach((el) => el.setAttribute("hidden", ""));
+        document
+          .querySelectorAll('[data-notif-open="true"]')
+          .forEach((el) => el.setAttribute("data-notif-open", "false"));
+      }
+      if (!t.closest(".nav-toggle") && !t.closest(".primary-nav")) {
+        const nav = document.querySelector(".primary-nav");
+        if (nav?.getAttribute("data-open") === "true") {
+          nav.setAttribute("data-open", "false");
+          document
+            .querySelector(".nav-toggle")
+            ?.setAttribute("aria-expanded", "false");
+        }
+      }
+    };
+    document.addEventListener("click", onDocClick);
+    return () => document.removeEventListener("click", onDocClick);
+  }, []);
+
+  return null;
 }

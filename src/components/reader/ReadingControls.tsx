@@ -2,14 +2,14 @@
 
 /**
  * Reading controls (7.4/7.5): text appearance + theme.
- * Curated presets only - light / dark / warm, four sizes, two faces.
- * Persists to readerPreferences when signed in; localStorage otherwise.
+ * Curated presets only - light / dark / warm, four sizes.
+ * Persists to reader_preferences when signed in; localStorage otherwise.
+ * The reading surface follows CSS tokens; no inline hex backgrounds,
+ * so site dark mode can never fight the reading theme.
  */
 
-import { useEffect, useState } from "react";
-import { useConvexAuth } from "@convex-dev/auth/react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@convex/_generated/api";
+import { useEffect, useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/browser";
 
 type Theme = "light" | "dark" | "warm";
 type Size = "s" | "m" | "l" | "xl";
@@ -21,74 +21,83 @@ const SIZES: Record<Size, string> = {
   xl: "1.4375rem",
 };
 
-const THEME_BG: Record<Theme, string> = {
-  light: "#ffffff",
-  dark: "#12110f",
-  warm: "#f6efe2",
-};
-
 export function ReadingControls() {
-  const { isAuthenticated } = useConvexAuth();
-  const prefs = useQuery(
-    api.preferences.getMyPreferences,
-    isAuthenticated ? {} : "skip",
-  );
-  const update = useMutation(api.preferences.updatePreferences);
-
   const [open, setOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>("light");
   const [size, setSize] = useState<Size>("m");
+  const [ready, setReady] = useState(false);
+  const hostRef = useRef<HTMLDivElement>(null);
 
-  // Hydrate from server prefs or localStorage (deferred to avoid sync setState)
+  // Hydrate from db (signed-in) or localStorage (guests); default follows site theme.
   useEffect(() => {
-    const t = setTimeout(() => {
-      if (isAuthenticated && prefs) {
-        setTheme(prefs.readingTheme);
-        setSize(prefs.fontSize);
-      } else if (!isAuthenticated) {
+    const t = setTimeout(async () => {
+      const siteDark =
+        document.documentElement.getAttribute("data-theme") === "dark";
+      const fallback: Theme = siteDark ? "dark" : "light";
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from("reader_preferences")
+          .select("reading_theme, font_size")
+          .maybeSingle();
+        setTheme((data?.reading_theme as Theme) ?? fallback);
+        setSize((data?.font_size as Size) ?? "m");
+      } else {
         const lt = localStorage.getItem("the:theme") as Theme | null;
         const ls = localStorage.getItem("the:size") as Size | null;
-        if (lt) setTheme(lt);
-        if (ls) setSize(ls);
+        setTheme(lt ?? fallback);
+        setSize(ls ?? "m");
       }
+      setReady(true);
     }, 0);
     return () => clearTimeout(t);
-  }, [isAuthenticated, prefs]);
+  }, []);
 
-  // Apply to the article element
+  // Apply via data attribute + CSS variables only (dark-mode safe).
   useEffect(() => {
+    if (!ready) return;
     const article = document.querySelector("article[data-reading-theme]");
-    if (article) {
-      (article as HTMLElement).dataset.readingTheme = theme;
-      (article as HTMLElement).style.background = THEME_BG[theme];
-    }
+    if (article) (article as HTMLElement).dataset.readingTheme = theme;
     document.querySelectorAll<HTMLElement>(".article-body").forEach((el) => {
       el.style.fontSize = SIZES[size];
     });
-    if (!isAuthenticated) {
-      localStorage.setItem("the:theme", theme);
-      localStorage.setItem("the:size", size);
-    }
-  }, [theme, size, isAuthenticated]);
+    const supabase = createClient();
+    void supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        void supabase.from("reader_preferences").upsert({
+          user_id: user.id,
+          reading_theme: theme,
+          font_size: size,
+          updated_at: new Date().toISOString(),
+        });
+      } else {
+        localStorage.setItem("the:theme", theme);
+        localStorage.setItem("the:size", size);
+      }
+    });
+  }, [theme, size, ready]);
 
-  const set = async (t: Theme | null, s: Size | null) => {
-    if (t) setTheme(t);
-    if (s) setSize(s);
-    if (isAuthenticated) {
-      await update({
-        ...(t ? { readingTheme: t } : {}),
-        ...(s ? { fontSize: s } : {}),
-      });
-    }
-  };
+  // outside-tap close
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (hostRef.current && !hostRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
 
   return (
-    <div className="relative">
+    <div className="appearance-host relative" ref={hostRef}>
       <button
         onClick={() => setOpen(!open)}
         aria-expanded={open}
         aria-haspopup="true"
-        className="meta-line flex items-center gap-1.5 rounded-editorial border border-line px-3 py-1.5 transition-colors hover:border-line-strong"
+        data-appearance-open={open}
+        className="appearance-trigger meta-line flex items-center gap-1.5 rounded-editorial border border-line px-3 py-1.5 transition-colors hover:border-line-strong"
       >
         <svg
           aria-hidden="true"
@@ -104,14 +113,14 @@ export function ReadingControls() {
         Appearance
       </button>
       {open && (
-        <div className="absolute right-0 z-30 mt-2 w-48 rounded-editorial border border-line bg-paper-raised p-4 shadow-sm">
+        <div className="appearance-pop" role="dialog" aria-label="Reading appearance">
           <fieldset>
             <legend className="meta-line mb-2 font-medium">Theme</legend>
             <div className="flex gap-2">
               {(["light", "warm", "dark"] as Theme[]).map((t) => (
                 <button
                   key={t}
-                  onClick={() => set(t, null)}
+                  onClick={() => setTheme(t)}
                   aria-pressed={theme === t}
                   className="flex-1 rounded-editorial-sm border px-2 py-1.5 text-xs capitalize transition-colors"
                   style={{
@@ -130,7 +139,7 @@ export function ReadingControls() {
               {(["s", "m", "l", "xl"] as Size[]).map((s) => (
                 <button
                   key={s}
-                  onClick={() => set(null, s)}
+                  onClick={() => setSize(s)}
                   aria-pressed={size === s}
                   className="flex-1 rounded-editorial-sm border px-2 py-1.5 text-xs transition-colors"
                   style={{

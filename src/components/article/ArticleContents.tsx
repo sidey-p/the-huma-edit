@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * Article contents (7.7): scroll-aware TOC for long articles,
- * collapsible on mobile, generated from editor-defined headings.
+ * Article contents (7.7): scroll-aware TOC for long articles.
+ * Desktop: sticky sidebar. Mobile/tablet: collapsible summary at top.
+ * Rendered once inside the flex layout; CSS controls visibility per breakpoint.
  */
 
 import { useEffect, useState } from "react";
@@ -12,7 +13,7 @@ export function ArticleContents() {
     Array<{ id: string; text: string; level: number }>
   >([]);
   const [active, setActive] = useState<string | null>(null);
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const found: Array<{ id: string; text: string; level: number }> = [];
@@ -34,10 +35,9 @@ export function ArticleContents() {
           level: Number(h.tagName.slice(1)),
         });
       });
-    // defer to next tick to avoid synchronous setState in effect
     const t = setTimeout(() => {
       setHeads(found);
-      if (found.length < 3) setOpen(false);
+      if (found.length >= 3) setOpen(true);
     }, 0);
     return () => clearTimeout(t);
   }, []);
@@ -64,26 +64,34 @@ export function ArticleContents() {
   return (
     <nav
       aria-label="Article contents"
-      className="sticky top-20 hidden max-h-[70vh] w-52 overflow-y-auto lg:block"
+      className={
+        /* mobile: full-width block at top. Desktop: sticky sidebar */
+        "shrink-0 overflow-y-auto " +
+        "max-h-[70vh] " +
+        /* mobile/tablet: block, full-width */
+        "block w-full mb-8 border border-line rounded-editorial px-4 py-3 " +
+        /* desktop: sticky sidebar, narrow, no border */
+        "lg:sticky lg:top-20 lg:w-52 lg:max-h-[70vh] lg:border-0 lg:px-0 lg:py-0 lg:mb-0 lg:ml-auto"
+      }
     >
       <button
         onClick={() => setOpen(!open)}
         aria-expanded={open}
-        className="meta-line font-medium"
+        className="meta-line font-medium w-full text-left"
       >
-        {open ? "Contents −" : "Contents +"}
+        {open ? "Contents -" : "Contents +"}
       </button>
       {open && (
-        <ul className="mt-3 space-y-2 border-l border-line pl-3">
+        <ul className="mt-2 space-y-1.5 border-t border-line pt-2 lg:border-t-0 lg:pt-0 lg:border-l lg:border-line lg:pl-3 lg:mt-3 lg:space-y-2">
           {heads.map((h) => (
-            <li key={h.id} style={{ paddingLeft: (h.level - 2) * 0.5 }}>
+            <li key={h.id} style={{ paddingLeft: (h.level - 2) * 0.75 }}>
               <a
                 href={`#${h.id}`}
-                className={`block truncate text-xs transition-colors ${
+                className={`block truncate transition-colors ${
                   active === h.id
                     ? "text-accent"
                     : "text-ink-muted hover:text-ink"
-                }`}
+                } ${/* smaller on mobile, even smaller on desktop */ ""} text-sm lg:text-xs`}
               >
                 {h.text}
               </a>

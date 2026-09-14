@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { fetchQuery } from "convex/nextjs";
-import { api } from "@convex/_generated/api";
 import { PublicShell } from "@/components/navigation/PublicShell";
 import { ArticleBody } from "@/components/article/ArticleBody";
 import { ArticleContents } from "@/components/article/ArticleContents";
 import { SaveButton } from "@/components/reader/SaveButton";
 import { ReadingControls } from "@/components/reader/ReadingControls";
 import { ReadingProgressTracker } from "@/components/reader/ReadingProgressTracker";
-import { fetchArticleBySlug } from "@/lib/content";
+import { Highlighter } from "@/components/reader/Highlighter";
+import { BookmarkFab, ResumeAnchor } from "@/components/reader/BookmarkFab";
+import { Comments } from "@/components/site/Comments";
+import { fetchArticleBySlug, fetchRelated } from "@/lib/content";
 import { formatReadingTime, formatDate } from "@/lib/format";
 
 /** §7.2 article header + §7.3 reading layout. Server-rendered (§25). */
@@ -21,15 +22,7 @@ export default async function ArticlePage({
 
   if (!article) notFound();
 
-  const [wordsToNotice, topics] = await Promise.all([
-    fetchQuery(api.vocabulary.listByArticle, {
-      articleId: article._id as never,
-    }),
-    fetchQuery(api.taxonomy.listTopicsForArticle, {
-      articleId: article._id as never,
-    }),
-  ]);
-
+  const related = await fetchRelated(article._id, null);
   const corner = article.corners.find((c) => c) ?? null;
 
   // §29 SEO: JSON-LD structured data for rich article results.
@@ -37,24 +30,19 @@ export default async function ArticlePage({
     "@context": "https://schema.org",
     "@type": "Article",
     headline: article.title,
-    description: article.seoDescription ?? article.dek ?? undefined,
-    datePublished: article.publishedAt
-      ? new Date(article.publishedAt).toISOString()
-      : undefined,
-    dateModified: new Date(article.updatedAt).toISOString(),
+    description: article.seo_description ?? article.dek ?? undefined,
+    datePublished: article.published_at,
+    dateModified: article.updated_at,
     author: article.author
       ? {
           "@type": "Person",
           name: article.author.displayName,
           ...(article.author.slug
             ? { url: `/authors/${article.author.slug}` }
-            : {}),
+           : {}),
         }
-      : undefined,
-    publisher: {
-      "@type": "Organization",
-      name: "The Human Edit",
-    },
+     : undefined,
+    publisher: { "@type": "Organization", name: "The Human Edit" },
     isAccessibleForFree: true,
     inLanguage: "en",
   };
@@ -66,7 +54,9 @@ export default async function ArticlePage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <ReadingProgressTracker articleId={article._id} />
-      <article data-reading-theme="light" className="w-full bg-white">
+      <ResumeAnchor />
+      <BookmarkFab articleId={article._id} />
+      <article data-reading-theme="light" className="w-full bg-paper-raised">
         {/* 7.2 Article header */}
         <header className="mx-auto max-w-3xl px-4 pb-10 pt-16 sm:px-6">
           {corner && (
@@ -83,15 +73,11 @@ export default async function ArticlePage({
               {article.dek}
             </p>
           )}
-          {/* Topic chips — related ideas between header and body (§5.7) */}
-          {topics.length > 0 && (
+          {/* Topic chips : open the topic's related articles (§5.7) */}
+          {article.topics.length > 0 && (
             <div className="mt-5 flex flex-wrap gap-2">
-              {topics.map((t) => (
-                <Link
-                  key={t._id}
-                  href={`/search?q=${encodeURIComponent(t.name)}`}
-                  className="rounded-editorial-sm border border-line px-2.5 py-1 text-xs text-ink-muted transition-colors hover:border-line-strong hover:text-ink"
-                >
+              {article.topics.map((t) => (
+                <Link key={t.id} href={`/topics/${t.slug}`} className="chip">
                   {t.name}
                 </Link>
               ))}
@@ -115,15 +101,19 @@ export default async function ArticlePage({
                 </span>
               )}
               <span aria-hidden="true">·</span>
-              <time dateTime={new Date(article.publishedAt ?? 0).toISOString()}>
-                {formatDate(article.publishedAt)}
+              <time dateTime={article.published_at ?? undefined}>
+                {article.published_at
+                  ? formatDate(new Date(article.published_at).getTime())
+                 : ""}
               </time>
               <span aria-hidden="true">·</span>
-              <span>{formatReadingTime(article.readingTimeSeconds)}</span>
-              {article.contentType && (
+              <span>{formatReadingTime(article.reading_time_seconds)}</span>
+              {article.content_type && (
                 <>
                   <span aria-hidden="true">·</span>
-                  <span className="capitalize">{article.contentType}</span>
+                  <span className="capitalize">
+                    {article.content_type.replace("_", " ")}
+                  </span>
                 </>
               )}
             </div>
@@ -136,12 +126,19 @@ export default async function ArticlePage({
         </header>
 
         {/* 7.3 Reading layout + 7.7 margin-rail TOC */}
-        <div className="mx-auto flex max-w-5xl gap-12 px-4 pb-24 sm:px-6">
-          <div className="mx-auto max-w-3xl min-w-0">
-            <ArticleBody doc={article.contentJson as never} />
+        <div className="mx-auto max-w-5xl px-4 pb-24 sm:px-6">
+          <div className="flex flex-col gap-6 lg:flex-row lg:gap-12">
+            <div className="mx-auto max-w-3xl min-w-0">
+              <ArticleBody
+                doc={article.content_json as never}
+                ads={article.ads}
+                links={article.editorialLinks}
+              />
 
-            {/* §18.2 Words to notice — vocabulary from this article */}
-            {wordsToNotice.length > 0 && (
+              <Highlighter articleId={article._id} />
+
+            {/* §18.2 Words to notice : vocabulary from this article */}
+            {article.wordsToNotice.length > 0 && (
               <aside
                 aria-labelledby="words-to-notice"
                 className="mt-16 border-t border-line pt-8"
@@ -154,7 +151,7 @@ export default async function ArticlePage({
                   Words to notice
                 </h2>
                 <ul className="mt-4 space-y-4">
-                  {wordsToNotice.map((w) => (
+                  {article.wordsToNotice.map((w) => (
                     <li key={w._id}>
                       <Link
                         href="/english/vocabulary"
@@ -169,7 +166,7 @@ export default async function ArticlePage({
                           </span>
                         )}
                         <span className="text-sm text-ink-muted">
-                          — {w.plainMeaning}
+                          - {w.plainMeaning}
                         </span>
                       </Link>
                     </li>
@@ -182,61 +179,44 @@ export default async function ArticlePage({
                 </p>
               </aside>
             )}
+
+            <Comments articleId={article._id} />
+            </div>
+            <ArticleContents />
           </div>
-          <ArticleContents />
         </div>
 
         {/* 7.9 End-of-article: continue exploring, never a dead grid */}
-        <EndOfArticle articleId={article._id} cornerSlug={corner?.slug ?? null} />
+        {related.length === 0 ? (
+          <section className="mx-auto max-w-3xl border-t border-line px-4 py-16 text-center sm:px-6">
+            <p className="meta-line">Keep reading</p>
+            <Link
+              href={corner ? `/corners/${corner.slug}` : "/corners"}
+              className="mt-3 inline-block font-display text-2xl text-ink underline decoration-line decoration-1 underline-offset-4 hover:text-accent"
+            >
+              Explore more from this corner
+            </Link>
+          </section>
+        ) : (
+          <section className="mx-auto max-w-3xl border-t border-line px-4 py-16 sm:px-6">
+            <p className="meta-line">Keep reading</p>
+            <div className="mt-6 grid gap-10 sm:grid-cols-3">
+              {related.map((r) => (
+                <Link key={r._id} href={`/articles/${r.slug}`} className="group">
+                  <p className="meta-line text-accent">{r.reason}</p>
+                  <h3 className="mt-2 font-display text-lg leading-snug text-ink transition-colors group-hover:text-accent">
+                    {r.title}
+                  </h3>
+                  {r.dek && (
+                    <p className="mt-1 line-clamp-2 text-sm text-ink-muted">{r.dek}</p>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </article>
     </PublicShell>
-  );
-}
-
-/** 7.9: related pieces with reasons (17.3 explainability). */
-async function EndOfArticle({
-  articleId,
-  cornerSlug,
-}: {
-  articleId: string;
-  cornerSlug: string | null;
-}) {
-  const related = await fetchQuery(api.paths.listRelated, {
-    articleId: articleId as never,
-    limit: 3,
-  });
-
-  if (related.length === 0) {
-    return (
-      <section className="mx-auto max-w-3xl border-t border-line px-4 py-16 text-center sm:px-6">
-        <p className="meta-line">Keep reading</p>
-        <Link
-          href={cornerSlug ? `/corners/${cornerSlug}` : "/corners"}
-          className="mt-3 inline-block font-display text-2xl text-ink underline decoration-line decoration-1 underline-offset-4 hover:text-accent"
-        >
-          Explore more from this corner
-        </Link>
-      </section>
-    );
-  }
-
-  return (
-    <section className="mx-auto max-w-3xl border-t border-line px-4 py-16 sm:px-6">
-      <p className="meta-line">Keep reading</p>
-      <div className="mt-6 grid gap-10 sm:grid-cols-3">
-        {related.map((r) => (
-          <Link key={r._id} href={`/articles/${r.slug}`} className="group">
-            <p className="meta-line text-accent">{r.reason}</p>
-            <h3 className="mt-2 font-display text-lg leading-snug text-ink transition-colors group-hover:text-accent">
-              {r.title}
-            </h3>
-            {r.dek && (
-              <p className="mt-1 line-clamp-2 text-sm text-ink-muted">{r.dek}</p>
-            )}
-          </Link>
-        ))}
-      </div>
-    </section>
   );
 }
 
@@ -248,24 +228,22 @@ export async function generateMetadata({
   if (!article) return { title: "Not found" };
   return {
     title: article.title,
-    description: article.seoDescription ?? article.dek ?? undefined,
+    description: article.seo_description ?? article.dek ?? undefined,
     alternates: { canonical: `/articles/${article.slug}` },
     openGraph: {
       title: article.title,
-      description: article.seoDescription ?? article.dek ?? undefined,
+      description: article.seo_description ?? article.dek ?? undefined,
       type: "article",
-      publishedTime: article.publishedAt
-        ? new Date(article.publishedAt).toISOString()
-        : undefined,
+      publishedTime: article.published_at ?? undefined,
       authors: article.author
         ? [`/authors/${article.author.slug ?? ""}`]
-        : undefined,
+       : undefined,
       siteName: "The Human Edit",
     },
     twitter: {
       card: "summary_large_image",
       title: article.title,
-      description: article.seoDescription ?? article.dek ?? undefined,
+      description: article.seo_description ?? article.dek ?? undefined,
     },
   };
 }

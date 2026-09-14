@@ -3,9 +3,9 @@
 import { useEffect } from "react";
 
 /**
- * Theme manager — port of the reference theme.js. Three behaviors:
+ * Theme manager: three behaviors:
  *   1. Reads the OS/browser preference via matchMedia on first load.
- *   2. Keeps listening — if the user flips their OS theme while the
+ *   2. Keeps listening: if the user flips their OS theme while the
  *      tab is open, the site updates live (unless they chose manually).
  *   3. Persists an explicit manual choice in localStorage ("hume-theme"),
  *      separately from the "auto" state.
@@ -16,6 +16,7 @@ import { useEffect } from "react";
 const STORAGE_KEY = "hume-theme"; // "light" | "dark" | "auto"
 
 function systemTheme(): "dark" | "light" {
+  if (typeof window === "undefined") return "light";
   return window.matchMedia("(prefers-color-scheme: dark)").matches
     ? "dark"
     : "light";
@@ -31,8 +32,10 @@ function getStored(): string {
 
 function apply(theme: string) {
   const root = document.documentElement;
-  root.setAttribute("data-theme", theme === "auto" ? systemTheme() : theme);
+  const resolved = theme === "auto" ? systemTheme() : theme;
+  root.setAttribute("data-theme", resolved);
   root.setAttribute("data-theme-mode", theme);
+  root.style.colorScheme = resolved;
 }
 
 export function ThemeProvider() {
@@ -45,7 +48,9 @@ export function ThemeProvider() {
     };
     media.addEventListener("change", onChange);
 
+    // Apply stored theme on hydration
     apply(getStored());
+
     return () => media.removeEventListener("change", onChange);
   }, []);
 
