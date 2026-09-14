@@ -12,7 +12,7 @@ export default function AboutPage() {
           <p>
             The Human Edit is a modern digital publication built around one
             act: reading. Stories, ideas, language, perspectives, and useful
-            things — written by humans, for humans.
+            things: written by humans, for humans.
           </p>
           <blockquote>
             BY HUMANS. FOR HUMANS.
@@ -20,7 +20,7 @@ export default function AboutPage() {
           <h2>Why a reading publication</h2>
           <p>
             Most of the internet is built to keep you scrolling. This place is
-            built to have you leave with something — something you read,
+            built to have you leave with something: something you read,
             learned, felt, or thought about. Search here retrieves good
             writing; it never answers in place of the piece.
           </p>
@@ -42,5 +42,5 @@ export default function AboutPage() {
 
 export const metadata: Metadata = {
   title: "About",
-  description: "The Human Edit — a place people go to read.",
+  description: "The Human Edit: a place people go to read.",
 };

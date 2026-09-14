@@ -1,8 +1,7 @@
 import type { MetadataRoute } from "next";
-import { fetchQuery } from "convex/nextjs";
-import { api } from "@convex/_generated/api";
+import { createClient } from "@/lib/supabase/server";
 
-/** §29.3 dynamic sitemap: articles, corners, authors, paths. */
+/** §29.3 dynamic sitemap: articles, corners, authors, paths, topics. */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -11,6 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/explore",
     "/corners",
     "/paths",
+    "/topics",
     "/archive",
     "/about",
     "/authors",
@@ -28,37 +28,59 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   try {
-    const [articles, corners, authors, paths] = await Promise.all([
-      fetchQuery(api.articles.listPublished, { limit: 500 }),
-      fetchQuery(api.taxonomy.listCorners, {}),
-      fetchQuery(api.authors.listAuthors, {}),
-      fetchQuery(api.paths.listPublishedPaths, {}),
+    const supabase = await createClient();
+    const [articles, corners, authors, paths, topics] = await Promise.all([
+      supabase
+        .from("articles")
+        .select("slug, published_at, updated_at")
+        .eq("status", "published")
+        .limit(500),
+      supabase.from("corners").select("slug").eq("is_active", true),
+      supabase.from("authors").select("slug"),
+      supabase.from("reading_paths").select("slug").eq("status", "published"),
+      supabase.from("topics").select("slug"),
     ]);
 
-    const articlePages: MetadataRoute.Sitemap = articles.map((a) => ({
-      url: `${base}/articles/${a.slug}`,
-      lastModified: new Date(a.publishedAt ?? Date.now()),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    }));
+    const articlePages: MetadataRoute.Sitemap = (articles.data ?? []).map(
+      (a: { slug: string; updated_at?: string; published_at?: string }) => ({
+        url: `${base}/articles/${a.slug}`,
+        lastModified: new Date(a.updated_at ?? a.published_at ?? Date.now()),
+        changeFrequency: "monthly",
+        priority: 0.8,
+      }),
+    );
 
-    const cornerPages: MetadataRoute.Sitemap = corners.map((c) => ({
-      url: `${base}/corners/${c.slug}`,
-      changeFrequency: "weekly",
-      priority: 0.6,
-    }));
+    const cornerPages: MetadataRoute.Sitemap = (corners.data ?? []).map(
+      (c: { slug: string }) => ({
+        url: `${base}/corners/${c.slug}`,
+        changeFrequency: "weekly",
+        priority: 0.6,
+      }),
+    );
 
-    const authorPages: MetadataRoute.Sitemap = authors.map((a) => ({
-      url: `${base}/authors/${a.slug}`,
-      changeFrequency: "monthly",
-      priority: 0.4,
-    }));
+    const authorPages: MetadataRoute.Sitemap = (authors.data ?? []).map(
+      (a: { slug: string }) => ({
+        url: `${base}/authors/${a.slug}`,
+        changeFrequency: "monthly",
+        priority: 0.4,
+      }),
+    );
 
-    const pathPages: MetadataRoute.Sitemap = paths.map((p) => ({
-      url: `${base}/paths/${p.slug}`,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    }));
+    const pathPages: MetadataRoute.Sitemap = (paths.data ?? []).map(
+      (p: { slug: string }) => ({
+        url: `${base}/paths/${p.slug}`,
+        changeFrequency: "monthly",
+        priority: 0.6,
+      }),
+    );
+
+    const topicPages: MetadataRoute.Sitemap = (topics.data ?? []).map(
+      (t: { slug: string }) => ({
+        url: `${base}/topics/${t.slug}`,
+        changeFrequency: "weekly",
+        priority: 0.5,
+      }),
+    );
 
     return [
       ...staticPages,
@@ -66,9 +88,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ...cornerPages,
       ...authorPages,
       ...pathPages,
+      ...topicPages,
     ];
   } catch {
-    // Convex unreachable at build time - ship static pages only
+    // Supabase unreachable at build time - ship static pages only
     return staticPages;
   }
 }

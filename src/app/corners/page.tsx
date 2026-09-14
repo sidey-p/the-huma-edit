@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicShell } from "@/components/navigation/PublicShell";
-import { fetchQuery } from "convex/nextjs";
-import { api } from "@convex/_generated/api";
+import { fetchCorners, fetchCornerFeatures } from "@/lib/content";
 
 /** §05 Corners index. */
 export default async function CornersPage() {
   const [corners, features] = await Promise.all([
-    fetchQuery(api.taxonomy.listCorners, {}),
-    fetchQuery(api.articles.listCornerFeatures, {}),
+    fetchCorners(),
+    fetchCornerFeatures(),
   ]);
 
   return (

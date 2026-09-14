@@ -98,7 +98,7 @@ export function WriterEditor({
                   className="truncate text-left text-sm text-ink-muted transition-colors hover:text-ink"
                   title={h.text}
                 >
-                  {h.text || "—"}
+                  {h.text || "-"}
                 </button>
               </li>
             ))}

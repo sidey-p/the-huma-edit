@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
-import { ConvexClientProvider } from "./providers";
+import { SupabaseProvider } from "./providers";
 import "./globals.css";
 
-// §21.2 Display face — headlines only, never body
+// §21.2 Display face : headlines only, never body
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
   weight: ["500", "600", "700"],
 });
 
-// §21.2 Interface/body face — UI and long-form body, never headlines
+// §21.2 Interface/body face - UI and long-form body, never headlines
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -22,8 +22,8 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://the-huma-edit.vercel.app",
   ),
   title: {
-    default: "The Human Edit — By humans. For humans.",
-    template: "%s — The Human Edit",
+    default: "The Human Edit - By humans. For humans.",
+    template: "%s - The Human Edit",
   },
   description:
     "Stories, ideas, language, perspectives, and useful things worth reading. By humans, for humans.",
@@ -41,8 +41,10 @@ const themeBootstrap = `(function () {
   try {
     var stored = localStorage.getItem("hume-theme") || "auto";
     var sys = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", stored === "auto" ? sys : stored);
+    var theme = stored === "auto" ? sys : stored;
+    document.documentElement.setAttribute("data-theme", theme);
     document.documentElement.setAttribute("data-theme-mode", stored);
+    document.documentElement.style.colorScheme = theme;
   } catch (e) {}
 })();`;
 
@@ -57,7 +59,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
       </head>
       <body className="min-h-full flex flex-col">
-        <ConvexClientProvider>{children}</ConvexClientProvider>
+        <SupabaseProvider>{children}</SupabaseProvider>
       </body>
     </html>
   );

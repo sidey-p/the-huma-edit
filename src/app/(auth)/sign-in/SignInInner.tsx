@@ -1,58 +1,70 @@
 "use client";
 
 /**
- * Reader/author sign-in (§37). Email + password via Convex Auth.
+ * Reader/author sign-in (§37). Email + password + username via Supabase Auth.
  * The first account created on a fresh deployment becomes the owner.
  */
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useConvexAuth, useAuthActions } from "@convex-dev/auth/react";
-import { useQuery } from "convex/react";
-import { api } from "@convex/_generated/api";
+import { createClient } from "@/lib/supabase/browser";
 
 export default function SignInInner() {
-  const { isLoading, isAuthenticated } = useConvexAuth();
-  const { signIn } = useAuthActions();
   const router = useRouter();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-
-  const myProfile = useQuery(
-    api.profiles.getMyProfile,
-    isAuthenticated ? {} : "skip",
-  );
-
-  // Signed in already -> route by role (§31)
-  if (!isLoading && isAuthenticated && myProfile) {
-    router.replace(myProfile.role !== "reader" ? "/studio" : "/library");
-  }
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (busy) return;
     setBusy(true);
     setError(null);
+    const supabase = createClient();
     try {
       if (mode === "signup") {
-        // createAccount then sign in
-        await signIn("password", {
+        if (username.trim().length < 2) {
+          throw new Error("Pick a name others will see (2+ characters).");
+        }
+        const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
-          flow: "signIn",
-        } as never);
+          options: { data: { username: username.trim() } },
+        });
+        if (signUpError) throw signUpError;
+        // store the public username on the profile row
+        if (data.user) {
+          await supabase
+            .from("profiles")
+            .update({
+              username: username.trim(),
+              full_name: username.trim(),
+            })
+            .eq("id", data.user.id);
+        }
       } else {
-        await signIn("password", { email, password } as never);
+        const { error: signInError } =
+          await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) throw signInError;
       }
-      // onSignedIn handled by the auth state effect above
+
+      // Route by role (§31): staff → Studio, readers → Library.
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .single();
+      router.replace(
+        profile && profile.role !== "reader" ? "/studio" : "/library",
+      );
+      router.refresh();
     } catch (err) {
       setError(
-        err && typeof err === "object" && "message" in err
-          ? String((err as { message: string }).message)
-          : "Could not sign in. Check your email and password.",
+        err instanceof Error
+          ? err.message
+         : "Could not sign in. Check your email and password.",
       );
     } finally {
       setBusy(false);
@@ -68,10 +80,29 @@ export default function SignInInner() {
       <p className="mt-3 text-ink-muted">
         {mode === "signin"
           ? "Your library, highlights, and reading paths are waiting."
-          : "Save pieces, highlight passages, keep your place."}
+         : "Save pieces, highlight passages, keep your place."}
       </p>
 
       <form onSubmit={submit} className="mt-10 space-y-4">
+        {mode === "signup" && (
+          <div>
+            <label htmlFor="username" className="meta-line block">
+              Your name
+            </label>
+            <input
+              id="username"
+              type="text"
+              required
+              minLength={2}
+              maxLength={40}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="nickname"
+              placeholder="Shown on comments and highlights"
+              className="mt-2 w-full rounded-editorial border border-line bg-paper-raised px-4 py-2.5 focus:border-accent focus:outline-none"
+            />
+          </div>
+        )}
         <div>
           <label htmlFor="email" className="meta-line block">
             Email

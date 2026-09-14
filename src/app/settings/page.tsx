@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { PublicShell } from "@/components/navigation/PublicShell";
-import { SettingsInner } from "./SettingsInner";
+import { SettingsInner, SignedOutNote } from "./SettingsInner";
 
-/** §4.2 Settings — account, appearance, privacy. */
+/** §4.2 Settings : account, appearance, privacy. */
 export default function SettingsPage() {
   return (
     <PublicShell>
@@ -18,18 +17,6 @@ export default function SettingsPage() {
         </div>
       </div>
     </PublicShell>
-  );
-}
-
-/** Quiet sign-in prompt for signed-out readers — no forced signup (§1.3). */
-function SignedOutNote() {
-  return (
-    <p className="meta-line">
-      <Link href="/sign-in" className="ink-link">
-        Sign in
-      </Link>{" "}
-      to manage your account, library, and reading preferences.
-    </p>
   );
 }
 

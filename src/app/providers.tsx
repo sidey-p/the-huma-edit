@@ -1,11 +1,13 @@
 "use client";
 
-import { ConvexAuthProvider } from "@convex-dev/auth/react";
-import { ConvexReactClient } from "convex/react";
 import { ReactNode } from "react";
 
-const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
-export function ConvexClientProvider({ children }: { children: ReactNode }) {
-  return <ConvexAuthProvider client={convex}>{children}</ConvexAuthProvider>;
+/**
+ * Client provider shell. The browser Supabase client is created
+ * per-component via createClient() : the current @supabase/ssr
+ * pattern (no global context needed; each hook call binds RLS
+ * to the session cookies automatically).
+ */
+export function SupabaseProvider({ children }: { children: ReactNode }) {
+  return <>{children}</>;
 }

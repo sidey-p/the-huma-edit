@@ -5,38 +5,73 @@
  * Empty states per 39 - never dead ends.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useQuery } from "convex/react";
-import { useConvexAuth } from "@convex-dev/auth/react";
-import { api } from "@convex/_generated/api";
+import { createClient } from "@/lib/supabase/browser";
 import { formatDate } from "@/lib/format";
 
 type Tab = "saved" | "highlights" | "history";
 
-export default function LibraryInner() {
-  const { isLoading, isAuthenticated } = useConvexAuth();
-  const saved = useQuery(api.library.listSaved, isAuthenticated ? {} : "skip");
-  const highlights = useQuery(
-    api.library.listMyHighlights,
-    isAuthenticated ? {} : "skip",
-  );
-  const history = useQuery(
-    api.library.listHistory,
-    isAuthenticated ? {} : "skip",
-  );
-  const continueReading = useQuery(
-    api.library.listContinueReading,
-    isAuthenticated ? {} : "skip",
-  );
+type SavedRow = { article_id: string; created_at: string; articles: { slug: string; title: string; dek: string | null } | null };
+type HighlightRow = { id: string; selected_text: string; note: string | null; articles: { slug: string; title: string } | null };
+type ContinueRow = { article_id: string; progress_percent: number; last_read_at: string; articles: { slug: string; title: string } | null };
+type HistoryRow = { article_id: string; last_seen_at: string; articles: { slug: string; title: string } | null; reading_progress: { progress_percent: number; completed_at: string | null }[] | null };
 
+export default function LibraryInner() {
+  const [loading, setLoading] = useState(true);
+  const [signedIn, setSignedIn] = useState(false);
+  const [saved, setSaved] = useState<SavedRow[]>([]);
+  const [highlights, setHighlights] = useState<HighlightRow[]>([]);
+  const [history, setHistory] = useState<HistoryRow[]>([]);
+  const [continueReading, setContinueReading] = useState<ContinueRow[]>([]);
   const [tab, setTab] = useState<Tab>("saved");
 
-  if (isLoading) {
+  useEffect(() => {
+    const supabase = createClient();
+    void supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) {
+        setSignedIn(false);
+        setLoading(false);
+        return;
+      }
+      setSignedIn(true);
+
+      const [savedQ, hlQ, contQ, histQ] = await Promise.all([
+        supabase
+          .from("saved_articles")
+          .select("article_id, created_at, articles ( slug, title, dek )")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("highlights")
+          .select("id, selected_text, note, articles ( slug, title )")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("reading_progress")
+          .select("article_id, progress_percent, last_read_at, articles ( slug, title )")
+          .is("completed_at", null)
+          .gt("progress_percent", 1)
+          .order("last_read_at", { ascending: false })
+          .limit(6),
+        supabase
+          .from("reading_history")
+          .select("article_id, last_seen_at, articles ( slug, title ), reading_progress ( progress_percent, completed_at )")
+          .order("last_seen_at", { ascending: false })
+          .limit(50),
+      ]);
+
+      setSaved((savedQ.data ?? []) as unknown as SavedRow[]);
+      setHighlights((hlQ.data ?? []) as unknown as HighlightRow[]);
+      setContinueReading((contQ.data ?? []) as unknown as ContinueRow[]);
+      setHistory((histQ.data ?? []) as unknown as HistoryRow[]);
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) {
     return <p className="text-ink-muted">Opening your library…</p>;
   }
 
-  if (!isAuthenticated) {
+  if (!signedIn) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
         <p className="font-display text-3xl">Your library lives here.</p>
@@ -56,24 +91,24 @@ export default function LibraryInner() {
   return (
     <div>
       {/* 10.5 Continue reading */}
-      {continueReading && continueReading.length > 0 && (
+      {continueReading.length > 0 && (
         <section className="mb-14">
           <h2 className="font-display text-2xl">Continue reading</h2>
           <ul className="mt-5 divide-y divide-line border-t border-line">
             {continueReading.map((r) => (
-              <li key={r._id} className="py-4">
-                <Link href={`/articles/${r.slug}`} className="group block">
+              <li key={r.article_id} className="py-4">
+                <Link href={`/articles/${r.articles?.slug}`} className="group block">
                   <span className="font-display text-lg text-ink transition-colors group-hover:text-accent">
-                    {r.title}
+                    {r.articles?.title}
                   </span>
                   <span className="meta-line mt-1 block">
-                    {Math.round(r.progressPercent)}% · last read{" "}
-                    {formatDate(r.lastReadAt)}
+                    {Math.round(Number(r.progress_percent))}% · last read{" "}
+                    {formatDate(new Date(r.last_read_at).getTime())}
                   </span>
                   <span className="mt-2 block h-0.5 w-full rounded bg-line">
                     <span
                       className="block h-full rounded bg-accent"
-                      style={{ width: `${r.progressPercent}%` }}
+                      style={{ width: `${Math.round(Number(r.progress_percent))}%` }}
                     />
                   </span>
                 </Link>
@@ -102,9 +137,9 @@ export default function LibraryInner() {
             aria-selected={tab === id}
             onClick={() => setTab(id)}
             className={`-mb-px border-b-2 pb-2 text-sm transition-colors ${
-              tab === id
-                ? "border-accent text-ink"
-                : "border-transparent text-ink-muted hover:text-ink"
+                tab === id
+                  ? "border-accent text-ink"
+                  : "border-transparent text-ink-muted hover:text-ink"
             }`}
           >
             {label}
@@ -114,9 +149,7 @@ export default function LibraryInner() {
 
       {tab === "saved" && (
         <div className="mt-10">
-          {saved === undefined ? (
-            <p className="text-ink-muted">Loading…</p>
-          ) : saved.length === 0 ? (
+          {saved.length === 0 ? (
             <EmptyLibrary
               title="Nothing saved yet."
               sub="Find something worth keeping."
@@ -124,18 +157,18 @@ export default function LibraryInner() {
           ) : (
             <ul className="divide-y divide-line border-t border-line">
               {saved.map((s) => (
-                <li key={s._id} className="py-5">
-                  <Link href={`/articles/${s.slug}`} className="group block">
+                <li key={s.article_id} className="py-5">
+                  <Link href={`/articles/${s.articles?.slug}`} className="group block">
                     <span className="font-display text-lg text-ink transition-colors group-hover:text-accent">
-                      {s.title}
+                      {s.articles?.title}
                     </span>
-                    {s.dek && (
+                    {s.articles?.dek && (
                       <span className="mt-1 block text-sm text-ink-muted">
-                        {s.dek}
+                        {s.articles.dek}
                       </span>
                     )}
                     <span className="meta-line mt-1 block">
-                      {s.cornerName} · saved {formatDate(s.savedAt)}
+                      saved {formatDate(new Date(s.created_at).getTime())}
                     </span>
                   </Link>
                 </li>
@@ -147,9 +180,7 @@ export default function LibraryInner() {
 
       {tab === "highlights" && (
         <div className="mt-10">
-          {highlights === undefined ? (
-            <p className="text-ink-muted">Loading…</p>
-          ) : highlights.length === 0 ? (
+          {highlights.length === 0 ? (
             <EmptyLibrary
               title="No passages kept yet."
               sub="Highlight the lines you want to remember."
@@ -157,18 +188,18 @@ export default function LibraryInner() {
           ) : (
             <ul className="space-y-6">
               {highlights.map((h) => (
-                <li key={h._id} className="border-l-2 border-accent pl-4">
+                <li key={h.id} className="border-l-2 border-accent pl-4">
                   <p className="font-display text-lg italic text-ink">
-                    “{h.selectedText}”
+                    “{h.selected_text}”
                   </p>
                   {h.note && (
                     <p className="mt-1 text-sm text-ink-muted">{h.note}</p>
                   )}
                   <Link
-                    href={`/articles/${h.articleSlug}`}
+                    href={`/articles/${h.articles?.slug}`}
                     className="meta-line mt-1 block transition-colors hover:text-accent"
                   >
-                    {h.articleTitle}
+                    {h.articles?.title}
                   </Link>
                 </li>
               ))}
@@ -179,9 +210,7 @@ export default function LibraryInner() {
 
       {tab === "history" && (
         <div className="mt-10">
-          {history === undefined ? (
-            <p className="text-ink-muted">Loading…</p>
-          ) : history.length === 0 ? (
+          {history.length === 0 ? (
             <EmptyLibrary
               title="No reading history yet."
               sub="What you read lives here."
@@ -190,19 +219,19 @@ export default function LibraryInner() {
             <ul className="divide-y divide-line border-t border-line">
               {history.map((h) => (
                 <li
-                  key={h._id}
+                  key={h.article_id}
                   className="flex items-center justify-between py-4"
                 >
                   <Link
-                    href={`/articles/${h.slug}`}
+                    href={`/articles/${h.articles?.slug}`}
                     className="font-display text-lg text-ink transition-colors hover:text-accent"
                   >
-                    {h.title}
+                    {h.articles?.title}
                   </Link>
                   <span className="meta-line">
-                    {h.completed
+                    {h.reading_progress?.[0]?.completed_at
                       ? "Finished"
-                      : `${Math.round(h.progressPercent)}%`}
+                     : `${Math.round(Number(h.reading_progress?.[0]?.progress_percent ?? 0))}%`}
                   </span>
                 </li>
               ))}
@@ -225,3 +254,4 @@ function EmptyLibrary({ title, sub }: { title: string; sub: string }) {
     </div>
   );
 }
+

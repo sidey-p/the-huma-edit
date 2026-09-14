@@ -1,9 +1,12 @@
 import Link from "next/link";
-import { SiteScripts } from "@/components/site/SiteScripts";
+import { SiteScripts, ThemeToggle, MobileNav } from "@/components/site/SiteScripts";
+import { NotificationCenter } from "@/components/site/NotificationCenter";
+import { BookmarkMenu } from "@/components/site/BookmarkMenu";
+import { AuthIndicator } from "@/components/site/AuthIndicator";
 
 /**
- * §06.1 — Editorial masthead. Wordmark + primary nav + quiet icon
- * actions. Vocabulary: Explore, Corners, Paths, Library (§2.7).
+ * §06.1 Editorial masthead: wordmark + nav + quiet icon actions.
+ * Icons right-aligned; hamburger + its panel only below 640px.
  */
 export function SiteHeader() {
   return (
@@ -16,6 +19,7 @@ export function SiteHeader() {
             <small>BY HUMANS. FOR HUMANS.</small>
           </Link>
 
+          {/* Desktop nav (hidden on phones; hamburger panel takes over) */}
           <nav className="primary-nav" aria-label="Primary">
             <Link href="/explore">Explore</Link>
             <Link href="/corners">Corners</Link>
@@ -24,6 +28,7 @@ export function SiteHeader() {
           </nav>
 
           <div className="head-actions">
+            <AuthIndicator />
             <Link
               href="/search"
               className="icon-btn"
@@ -42,7 +47,9 @@ export function SiteHeader() {
                 <line x1="21" y1="21" x2="16.6" y2="16.6" />
               </svg>
             </Link>
-            {/* theme-toggle button rendered by SiteScripts */}
+            <NotificationCenter />
+            <BookmarkMenu />
+            <ThemeToggle />
             <Link href="/settings" className="icon-btn" aria-label="Account">
               <svg
                 width="18"
@@ -58,7 +65,7 @@ export function SiteHeader() {
                 <path d="M4.5 20c1.4-3.4 4.2-5.2 7.5-5.2s6.1 1.8 7.5 5.2" />
               </svg>
             </Link>
-            {/* nav-toggle button rendered by SiteScripts */}
+            <MobileNav />
           </div>
         </div>
       </header>

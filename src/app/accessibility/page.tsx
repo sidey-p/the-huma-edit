@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PublicShell } from "@/components/navigation/PublicShell";
 
-/** Accessibility statement (§22 — WCAG 2.2 AA target). */
+/** Accessibility statement (§22 - WCAG 2.2 AA target). */
 export default function AccessibilityPage() {
   return (
     <PublicShell>
@@ -11,7 +11,7 @@ export default function AccessibilityPage() {
         <div className="article-body mt-12">
           <p>
             The Human Edit targets WCAG 2.2 AA. Reading should be comfortable
-            for everyone — the whole point of the place.
+            for everyone: the whole point of the place.
           </p>
           <h2>What we do</h2>
           <p>

@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import { WriterDesk } from "@/components/studio/WriterDesk";
 
 /** Writer Desk (§12.3) - the writing screen. */

@@ -17,8 +17,8 @@ export default function HumanAuthorshipPage() {
           <h2>What we commit to</h2>
           <p>
             Every article is written by a person. Editors are people too: they
-            shape, question, correct, and approve what we publish. Provenance —
-            who wrote a piece, when it was first published, and what changed —
+            shape, question, correct, and approve what we publish. Provenance -
+            who wrote a piece, when it was first published, and what changed -
             stays visible on every page.
           </p>
           <h2>What we don&apos;t do</h2>
@@ -42,5 +42,5 @@ export default function HumanAuthorshipPage() {
 
 export const metadata: Metadata = {
   title: "Human authorship",
-  description: "How content is created at The Human Edit — by humans.",
+  description: "How content is created at The Human Edit: by humans.",
 };

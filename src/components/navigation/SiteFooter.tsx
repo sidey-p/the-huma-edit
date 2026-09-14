@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 /**
- * §06.7 — Footer with About, policies, and Archive.
+ * §06.7 - Footer with About, policies, and Archive.
  */
 export function SiteFooter() {
   return (

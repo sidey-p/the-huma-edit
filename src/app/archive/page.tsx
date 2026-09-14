@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import { PublicShell } from "@/components/navigation/PublicShell";
 import { ArticleCard } from "@/components/article/ArticleCard";
-import { fetchQuery } from "convex/nextjs";
-import { api } from "@convex/_generated/api";
+import { fetchHomeFeed } from "@/lib/content";
 
 /** Archive (§2.7): the complete published body. */
 export default async function ArchivePage() {
-  const feed = await fetchQuery(api.articles.listHomeFeed, { limit: 100 });
+  const feed = await fetchHomeFeed(100);
 
   return (
     <PublicShell>
@@ -17,7 +16,23 @@ export default async function ArchivePage() {
         </p>
         <div className="mt-16 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
           {feed.map((a) => (
-            <ArticleCard key={a._id} article={a} />
+            <ArticleCard
+              key={a.id}
+              article={{
+                _id: a.id,
+                slug: a.slug,
+                title: a.title,
+                dek: a.dek,
+                readingTimeSeconds: a.reading_time_seconds,
+                publishedAt: a.published_at
+                  ? new Date(a.published_at).getTime()
+                 : null,
+                contentType: a.content_type,
+                cornerName: a.cornerName,
+                cornerSlug: a.cornerSlug,
+                author: a.author,
+              }}
+            />
           ))}
         </div>
       </div>

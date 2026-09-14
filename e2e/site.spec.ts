@@ -6,7 +6,7 @@
  *
  * Run against the local dev server on http://localhost:3000.
  */
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 
 const PUBLIC_ROUTES = [
   "/",

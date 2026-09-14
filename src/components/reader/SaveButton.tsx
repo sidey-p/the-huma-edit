@@ -5,21 +5,32 @@
  * Save - bookmark confirmation via subtle motion (20.3).
  */
 
-import { useQuery, useMutation, useConvexAuth } from "convex/react";
-import { useState } from "react";
-import { api } from "@convex/_generated/api";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/browser";
 import { motion, AnimatePresence } from "motion/react";
 
 export function SaveButton({ articleId }: { articleId: string }) {
-  const { isAuthenticated } = useConvexAuth();
-  const saved = useQuery(
-    api.library.isSaved,
-    isAuthenticated ? { articleId: articleId as never } : "skip",
-  );
-  const toggle = useMutation(api.library.toggleSave);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const [saved, setSaved] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
 
-  if (!isAuthenticated) {
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setSignedIn(!!user);
+      if (user) {
+        supabase
+          .from("saved_articles")
+          .select("article_id")
+          .eq("article_id", articleId)
+          .then(({ data }) => setSaved(!!data?.length));
+      }
+    });
+  }, [articleId]);
+
+  if (signedIn === null) return null;
+
+  if (!signedIn) {
     return (
       <a
         href="/sign-in"
@@ -30,17 +41,31 @@ export function SaveButton({ articleId }: { articleId: string }) {
     );
   }
 
+  const toggle = async () => {
+    const supabase = createClient();
+    if (saved) {
+      await supabase
+        .from("saved_articles")
+        .delete()
+        .eq("article_id", articleId);
+      setSaved(false);
+    } else {
+      const { error } = await supabase
+        .from("saved_articles")
+        .insert({ article_id: articleId });
+      if (!error) {
+        setSaved(true);
+        setJustSaved(true);
+        setTimeout(() => setJustSaved(false), 1400);
+      }
+    }
+  };
+
   return (
     <span className="relative inline-flex">
       <button
-        onClick={async () => {
-          const r = await toggle({ articleId: articleId as never });
-          if (r.saved) {
-            setJustSaved(true);
-            setTimeout(() => setJustSaved(false), 1400);
-          }
-        }}
-        aria-pressed={saved === true}
+        onClick={toggle}
+        aria-pressed={saved}
         aria-label={saved ? "Remove from library" : "Save to library"}
         className="meta-line flex items-center gap-1.5 rounded-editorial border px-3 py-1.5 transition-colors"
         style={{

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 /**
  * THE HUMAN EDIT - Article renderer (section 7, 46)
  * Renders Tiptap JSON documents as server-rendered React.
- * No client JS, no animation dependency on the reading path (20.5).
+ * Also renders mid-article ad slots and editorial link blocks.
  */
 
 interface TiptapDoc {
@@ -27,16 +27,121 @@ interface Mark {
   attrs?: Record<string, unknown>;
 }
 
-export function ArticleBody({ doc }: { doc: TiptapDoc | null | undefined }) {
+export interface AdSlot {
+  id: string;
+  placement: string;
+  afterParagraph: number;
+  title: string | null;
+  body: string | null;
+  ctaLabel: string | null;
+  ctaUrl: string | null;
+  kind: string;
+}
+
+export interface EditorialLink {
+  slug: string;
+  title: string;
+  dek: string | null;
+  label: string | null;
+}
+
+export function ArticleBody({
+  doc,
+  ads = [],
+  links = [],
+}: {
+  doc: TiptapDoc | null | undefined;
+  ads?: AdSlot[];
+  links?: EditorialLink[];
+}) {
   if (!doc?.content?.length) {
     return null;
   }
+
+  const midAd = ads.find((a) => a.placement === "mid");
+  const endAd = ads.find((a) => a.placement === "end");
+  const topAd = ads.find((a) => a.placement === "top");
+
+  // paragraphs counted for ad placement
+  let paragraphIndex = 0;
+  const nodes: ReactNode[] = [];
+
+  for (let i = 0; i < doc.content.length; i++) {
+    const node = doc.content[i];
+    nodes.push(<RenderNode key={i} node={node} />);
+    if (node.type === "paragraph") {
+      paragraphIndex++;
+      if (midAd && paragraphIndex === midAd.afterParagraph) {
+        nodes.push(<AdBlock key={`ad-${midAd.id}`} ad={midAd} />);
+      }
+    }
+    // editorial links render after the 2nd paragraph block
+    if (node.type === "paragraph" && paragraphIndex === 2 && links.length > 0) {
+      nodes.push(<LinksBlock key="links" links={links} />);
+    }
+  }
+
   return (
     <div className="article-body">
-      {doc.content.map((node, i) => (
-        <RenderNode key={i} node={node} />
-      ))}
+      {topAd && <AdBlock ad={topAd} />}
+      {nodes}
+      {endAd && <AdBlock ad={endAd} />}
     </div>
+  );
+}
+
+function AdBlock({ ad }: { ad: AdSlot }) {
+  return (
+    <aside className="ad-slot" aria-label="Sponsored message" data-testid="ad-slot">
+      <p className="ad-kicker">
+        {ad.kind === "premium" ? "Support The Human Edit" : "Notice"}
+      </p>
+      {ad.title && <h3>{ad.title}</h3>}
+      {ad.body && <p>{ad.body}</p>}
+      {ad.ctaLabel && ad.ctaUrl && (
+        <a
+          href={ad.ctaUrl}
+          className="btn btn-primary mt-3"
+          style={{ padding: "0.55rem 1.1rem", fontSize: "var(--step--1)" }}
+        >
+          {ad.ctaLabel}
+        </a>
+      )}
+    </aside>
+  );
+}
+
+function LinksBlock({ links }: { links: EditorialLink[] }) {
+  return (
+    <aside
+      className="mt-8 border-l-2 border-gold pl-4"
+      aria-label="Keep reading"
+      data-testid="editorial-links"
+    >
+      <p className="meta-line font-medium" style={{ color: "var(--gold)" }}>
+        Elsewhere in The Human Edit
+      </p>
+      <ul className="mt-2 space-y-2.5">
+        {links.map((l) => (
+          <li key={l.slug}>
+            <a
+              href={`/articles/${l.slug}`}
+              className="group block"
+            >
+              <span className="font-display text-base text-ink transition-colors group-hover:text-accent">
+                {l.label ?? l.title}
+              </span>
+              {l.dek && (
+                <span className="mt-0.5 block text-sm text-ink-muted">
+                  {l.dek.slice(0, 120)}
+                  {l.dek.length > 120 ? "…" : ""}
+                </span>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </aside>
   );
 }
 
@@ -119,7 +224,7 @@ function applyMarks(text: string, marks: Mark[] | undefined): ReactNode {
       case "link": {
         const href = (mark.attrs?.href as string) ?? "#";
         return (
-          <a href={href} className="underline decoration-accent underline-offset-2">
+          <a href={href} className="underline decoration-gold underline-offset-2">
             {text}
           </a>
         );

@@ -2,74 +2,58 @@
 
 import { useState, useTransition, useCallback } from "react";
 import Link from "next/link";
-import { useConvex } from "convex/react";
-import { api } from "@convex/_generated/api";
+import { createClient } from "@/lib/supabase/browser";
 import { formatReadingTime, formatDate } from "@/lib/format";
 
 /**
  * §08 Explore Search - the signature feature.
  * Natural questions in, human-written articles out (§8.1).
- * Never generates an answer (§8.8).
+ * Never generates an answer (§8.8). Hybrid FTS + trigram via
+ * the search_articles Postgres function (§8.5 weights).
  */
 
-interface SearchHit {
-  articleId: string;
-  score: number;
-  matchedTerms: string[];
-}
-
-interface ArticleLite {
-  _id: string;
+interface SearchRow {
+  id: string;
   slug: string;
   title: string;
   dek: string | null;
-  readingTimeSeconds: number;
-  publishedAt: number | null;
-  cornerName?: string | null;
+  reading_time_seconds: number;
+  published_at: string | null;
+  corner_name: string | null;
+  score: number;
 }
 
 export function SearchExperience() {
-  const convex = useConvex();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<
-    Array<{ article: ArticleLite; score: number }> | null
-  >(null);
+  const [results, setResults] = useState<SearchRow[] | null>(null);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState(false);
   const [pending, start] = useTransition();
 
-  const runSearch = useCallback(
-    (q: string) => {
-      const trimmed = q.trim();
-      if (!trimmed) return;
-      start(async () => {
-        try {
-          const hits: SearchHit[] = await convex.action(
-            api.search.searchArticles,
-            { query: trimmed, limit: 12 },
-          );
-          const enriched = await Promise.all(
-            hits.map(
-              async (h): Promise<{ article: ArticleLite; score: number } | null> => {
-                const article = await convex.query(api.articles.getCardById, {
-                  id: h.articleId as never,
-                });
-                return article ? { article, score: h.score } : null;
-              },
-            ),
-          );
-          setResults(
-            enriched.filter((e): e is { article: ArticleLite; score: number } => e !== null),
-          );
-          setSearched(true);
-          setError(false);
-        } catch {
-          setError(true);
-        }
-      });
-    },
-    [convex],
-  );
+  const runSearch = useCallback((q: string) => {
+    const trimmed = q.trim();
+    if (!trimmed) return;
+    start(async () => {
+      try {
+        const supabase = createClient();
+        const { data, error: rpcError } = await supabase.rpc("search_articles", {
+          q: trimmed,
+          lim: 12,
+        });
+        if (rpcError) throw rpcError;
+        setResults((data ?? []) as SearchRow[]);
+        setSearched(true);
+        setError(false);
+        // §16.1 analytics: log the query
+        void supabase.from("search_events").insert({
+          query: trimmed,
+          result_count: data?.length ?? 0,
+        });
+      } catch {
+        setError(true);
+      }
+    });
+  }, []);
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -123,8 +107,8 @@ export function SearchExperience() {
       {/* Results */}
       {results && results.length > 0 && (
         <ol className="mt-12 space-y-8">
-          {results.map(({ article }) => (
-            <li key={article._id}>
+          {results.map((article) => (
+            <li key={article.id}>
               <Link
                 href={`/articles/${article.slug}`}
                 className="group block border-t border-line pt-5"
@@ -138,13 +122,15 @@ export function SearchExperience() {
                   </p>
                 )}
                 <p className="meta-line mt-2 flex flex-wrap gap-x-2">
-                  {article.cornerName && <span>{article.cornerName}</span>}
-                  {article.cornerName && <span aria-hidden="true">·</span>}
-                  <span>{formatReadingTime(article.readingTimeSeconds)}</span>
-                  {article.publishedAt && (
+                  {article.corner_name && <span>{article.corner_name}</span>}
+                  {article.corner_name && <span aria-hidden="true">·</span>}
+                  <span>{formatReadingTime(article.reading_time_seconds)}</span>
+                  {article.published_at && (
                     <>
                       <span aria-hidden="true">·</span>
-                      <span>{formatDate(article.publishedAt)}</span>
+                      <span>
+                        {formatDate(new Date(article.published_at).getTime())}
+                      </span>
                     </>
                   )}
                 </p>

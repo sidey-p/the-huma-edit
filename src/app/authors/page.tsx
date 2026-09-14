@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicShell } from "@/components/navigation/PublicShell";
-import { fetchQuery } from "convex/nextjs";
-import { api } from "@convex/_generated/api";
+import { fetchAuthors } from "@/lib/content";
 
-/** §11 Authors index — the people behind the words. */
+/** §11 Authors index : the people behind the words. */
 export default async function AuthorsPage() {
-  const authors = await fetchQuery(api.authors.listAuthors, {});
+  const authors = await fetchAuthors();
 
   return (
     <PublicShell>
@@ -28,7 +27,7 @@ export default async function AuthorsPage() {
                 <span className="corner-tag">AUTHOR</span>
                 <span>
                   <h4>{author.displayName}</h4>
-                  {author.shortBio && <p>{author.shortBio}</p>}
+                  {author.short_bio && <p>{author.short_bio}</p>}
                 </span>
                 <span className="meta">{author.displayName}</span>
               </Link>

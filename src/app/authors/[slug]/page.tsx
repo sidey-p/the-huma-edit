@@ -2,20 +2,15 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PublicShell } from "@/components/navigation/PublicShell";
 import { ArticleCard } from "@/components/article/ArticleCard";
-import { fetchQuery } from "convex/nextjs";
-import { api } from "@convex/_generated/api";
+import { fetchAuthorBySlug } from "@/lib/content";
 
 /** Author profile (§11.2): make the person visible, not just the byline. */
 export default async function AuthorPage({
   params,
 }: PageProps<"/authors/[slug]">) {
   const { slug } = await params;
-  const author = await fetchQuery(api.authors.getBySlug, { slug });
+  const author = await fetchAuthorBySlug(slug);
   if (!author) notFound();
-
-  const works = await fetchQuery(api.authors.listPublishedWorks, {
-    authorId: author._id,
-  });
 
   return (
     <PublicShell>
@@ -35,7 +30,8 @@ export default async function AuthorPage({
           )}
           <div className="meta-line mt-6 flex flex-wrap items-center gap-x-3">
             <span>
-              {works.length} {works.length === 1 ? "piece" : "pieces"} published
+              {author.works.length}{" "}
+              {author.works.length === 1 ? "piece" : "pieces"} published
             </span>
             {author.isGhost && <span>· Guest author</span>}
           </div>
@@ -43,10 +39,23 @@ export default async function AuthorPage({
 
         {/* §11.1 selected pieces + archive */}
         <section className="mt-12 space-y-8">
-          {works.map((w) => (
-            <ArticleCard key={w._id} article={w} />
+          {author.works.map((w) => (
+            <ArticleCard
+              key={w._id}
+              article={{
+                _id: w._id,
+                slug: w.slug,
+                title: w.title,
+                dek: w.dek,
+                readingTimeSeconds: w.reading_time_seconds,
+                publishedAt: w.published_at
+                  ? new Date(w.published_at).getTime()
+                 : null,
+                contentType: w.content_type,
+              }}
+            />
           ))}
-          {works.length === 0 && (
+          {author.works.length === 0 && (
             <p className="text-ink-muted">No published pieces yet.</p>
           )}
         </section>
@@ -59,7 +68,7 @@ export async function generateMetadata({
   params,
 }: PageProps<"/authors/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const author = await fetchQuery(api.authors.getBySlug, { slug });
+  const author = await fetchAuthorBySlug(slug);
   if (!author) return { title: "Not found" };
   return {
     title: author.displayName,

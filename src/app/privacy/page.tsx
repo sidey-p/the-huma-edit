@@ -12,14 +12,14 @@ export default function PrivacyPage() {
           <h2>What we collect</h2>
           <p>
             If you create an account: your email, and whatever reading
-            behavior makes the product better for you — saves, highlights,
+            behavior makes the product better for you: saves, highlights,
             progress. If you read anonymously: nothing tied to you.
           </p>
           <h2>What we never do</h2>
           <p>
             Sell data. Expose reading history. Build sensitive psychological
             profiles for targeting. Personalization here exists to help you
-            find your next piece — not to package you.
+            find your next piece, not to package you.
           </p>
           <h2>Your control</h2>
           <p>

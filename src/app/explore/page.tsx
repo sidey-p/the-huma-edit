@@ -3,16 +3,15 @@ import Link from "next/link";
 import { PublicShell } from "@/components/navigation/PublicShell";
 import { ArticleCard } from "@/components/article/ArticleCard";
 import { CornerShowcase } from "@/components/editorial/CornerShowcase";
-import { fetchQuery } from "convex/nextjs";
-import { api } from "@convex/_generated/api";
+import { fetchHomeFeed, fetchCorners, fetchCornerFeatures, fetchPaths } from "@/lib/content";
 
-/** §4.1 /explore — discovery hub: corners, paths, latest. */
+/** §4.1 /explore : discovery hub: corners, paths, latest. */
 export default async function ExplorePage() {
   const [feed, corners, features, paths] = await Promise.all([
-    fetchQuery(api.articles.listHomeFeed, { limit: 18 }),
-    fetchQuery(api.taxonomy.listCorners, {}),
-    fetchQuery(api.articles.listCornerFeatures, {}),
-    fetchQuery(api.paths.listPublishedPaths, {}),
+    fetchHomeFeed(18),
+    fetchCorners(),
+    fetchCornerFeatures(),
+    fetchPaths(),
   ]);
 
   return (
@@ -21,7 +20,7 @@ export default async function ExplorePage() {
         <section>
           <h1 className="display-xl">Explore</h1>
           <p className="mt-4 max-w-xl text-lg text-ink-muted">
-            Six corners, guided paths, and everything new — or{" "}
+            Six corners, guided paths, and everything new, or{" "}
             <Link href="/search" className="text-accent underline">
               ask for something specific
             </Link>
@@ -69,7 +68,23 @@ export default async function ExplorePage() {
           </h2>
           <div className="mt-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
             {feed.map((a) => (
-              <ArticleCard key={a._id} article={a} />
+              <ArticleCard
+                key={a.id}
+                article={{
+                  _id: a.id,
+                  slug: a.slug,
+                  title: a.title,
+                  dek: a.dek,
+                  readingTimeSeconds: a.reading_time_seconds,
+                  publishedAt: a.published_at
+                    ? new Date(a.published_at).getTime()
+                   : null,
+                  contentType: a.content_type,
+                  cornerName: a.cornerName,
+                  cornerSlug: a.cornerSlug,
+                  author: a.author,
+                }}
+              />
             ))}
           </div>
         </section>

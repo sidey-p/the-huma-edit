@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicShell } from "@/components/navigation/PublicShell";
-import { fetchQuery } from "convex/nextjs";
-import { api } from "@convex/_generated/api";
 import {
   PronounceButton,
   SaveWordButton,
 } from "@/components/vocabulary/WordControls";
+import { fetchVocabulary, fetchWordOfDay } from "@/lib/content";
 
 /**
- * §18 English Corner — vocabulary cards. No textbook feeling (18.4).
+ * §18 English Corner : vocabulary cards. No textbook feeling (18.4).
  * Word of the day (deterministic), pronunciation playback, save-to-list.
  */
 
@@ -18,7 +17,7 @@ const DIFFICULTY: { pattern: RegExp; label: string }[] = [
   { pattern: /equivocate|perfunctory|salience/i, label: "advanced" },
 ];
 
-function difficultyFor(word: string): string | null {
+function difficultyFor(word: string): string {
   for (const d of DIFFICULTY) {
     if (d.pattern.test(word)) return d.label;
   }
@@ -27,8 +26,8 @@ function difficultyFor(word: string): string | null {
 
 export default async function VocabularyPage() {
   const [words, wordOfDay] = await Promise.all([
-    fetchQuery(api.vocabulary.listVocabulary, {}),
-    fetchQuery(api.vocabulary.getWordOfTheDay, {}),
+    fetchVocabulary(),
+    fetchWordOfDay(),
   ]);
 
   return (
@@ -40,7 +39,7 @@ export default async function VocabularyPage() {
           How English actually lives inside writing and conversation.
         </p>
 
-        {/* Word of the day — same word for everyone each day */}
+        {/* Word of the day : same word for everyone each day */}
         {wordOfDay && (
           <section
             aria-labelledby="wotd-heading"
@@ -100,7 +99,7 @@ export default async function VocabularyPage() {
                     color:
                       difficultyFor(w.word) === "rare"
                         ? "var(--gold)"
-                        : "var(--ink-faint)",
+                       : "var(--ink-faint)",
                   }}
                 >
                   · {difficultyFor(w.word)}
@@ -116,13 +115,13 @@ export default async function VocabularyPage() {
               )}
               {w.etymology && (
                 <p className="meta-line mt-4">
-                  <span className="text-ink-faint">Origin — </span>
+                  <span className="text-ink-faint">Origin - </span>
                   {w.etymology}
                 </p>
               )}
               {w.commonMistakes && (
                 <p className="meta-line mt-2">
-                  <span className="text-ink-faint">Common mistake — </span>
+                  <span className="text-ink-faint">Common mistake - </span>
                   {w.commonMistakes}
                 </p>
               )}
@@ -174,5 +173,5 @@ export default async function VocabularyPage() {
 
 export const metadata: Metadata = {
   title: "Words to notice",
-  description: "Vocabulary from The English Corner — words worth keeping.",
+  description: "Vocabulary from The English Corner: words worth keeping.",
 };
