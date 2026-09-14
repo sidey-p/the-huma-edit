@@ -128,9 +128,12 @@ function FirstLoad() {
         </div>
       )}
       {showSpinner && (
-        <div id="quote-loader" aria-hidden="true">
-          <div className="quote-spinner" />
-          {quote && <p className="quote-text">{quote}</p>}
+        <div className="quote-loader" aria-hidden="true">
+          <div className="quote-brand">The Human Edit</div>
+          <div className="quote-divider">
+            <span /><span /><span />
+          </div>
+          {quote && <blockquote className="quote-text">{quote}</blockquote>}
         </div>
       )}
     </>

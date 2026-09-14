@@ -997,29 +997,57 @@ article[data-reading-theme="light"] { --reading-bg: #ffffff; --reading-ink: #1c1
   position: fixed; inset: 0; z-index: 999;
   background: var(--paper);
   display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 1.4rem;
+  align-items: center; justify-content: center; gap: 1.6rem;
   padding: 2rem;
-  transition: opacity var(--dur-mid) var(--ease-soft), visibility var(--dur-mid);
+  opacity: 1;
+  animation: quoteFadeIn 300ms var(--ease-soft);
 }
-.quote-loader[data-hidden="true"] { opacity: 0; visibility: hidden; pointer-events: none; }
-.quote-spinner {
-  width: 28px; height: 28px;
-  border: 2px solid var(--rule);
-  border-top-color: var(--orange);
+.quote-loader[data-hidden="true"] {
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity 400ms var(--ease-soft), visibility 400ms;
+}
+.quote-brand {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+.quote-divider {
+  display: flex; gap: 6px; align-items: center;
+}
+.quote-divider span {
+  width: 4px; height: 4px;
   border-radius: 50%;
-  animation: spin 700ms linear infinite;
+  background: var(--orange);
+  animation: quotePulse 1.2s ease-in-out infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+.quote-divider span:nth-child(2) { animation-delay: 0.2s; }
+.quote-divider span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes quotePulse {
+  0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
 .quote-text {
   font-family: var(--font-display);
   font-size: var(--step-0);
   font-style: italic;
   color: var(--ink-soft);
-  max-width: 34ch;
+  max-width: 32ch;
   text-align: center;
+  line-height: 1.6;
+  margin: 0;
   opacity: 0;
-  animation: fadeUp 500ms var(--ease-soft) forwards;
-  animation-delay: 250ms;
+  animation: quoteReveal 600ms var(--ease-soft) forwards;
+  animation-delay: 300ms;
+}
+@keyframes quoteFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes quoteReveal {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ============================================================
