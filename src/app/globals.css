@@ -990,7 +990,7 @@ article[data-reading-theme="light"] { --reading-bg: #ffffff; --reading-ink: #1c1
 [data-theme="dark"] .writing-row p { color: var(--ink-soft); }
 
 /* ============================================================
-   QUOTE SPINNER (repeat visits)
+   QUOTE SPINNER (repeat visits + route transitions)
    ============================================================ */
 
 .quote-loader {
@@ -1000,11 +1000,27 @@ article[data-reading-theme="light"] { --reading-bg: #ffffff; --reading-ink: #1c1
   align-items: center; justify-content: center; gap: 1.6rem;
   padding: 2rem;
   opacity: 1;
-  animation: quoteFadeIn 300ms var(--ease-soft);
+  animation: quoteFadeIn 200ms var(--ease-soft);
+  transition: opacity 300ms var(--ease-soft), visibility 300ms;
 }
 .quote-loader[data-hidden="true"] {
   opacity: 0; visibility: hidden; pointer-events: none;
-  transition: opacity 400ms var(--ease-soft), visibility 400ms;
+}
+
+/* Top progress bar during navigation */
+.route-progress {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 3px; z-index: 1000;
+  background: linear-gradient(90deg, transparent 0%, var(--orange) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: routeProgress 800ms linear infinite;
+  opacity: 0;
+  transition: opacity 200ms;
+}
+.route-progress.active { opacity: 1; }
+@keyframes routeProgress {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 .quote-brand {
   font-family: var(--font-display);
@@ -1047,6 +1063,15 @@ article[data-reading-theme="light"] { --reading-bg: #ffffff; --reading-ink: #1c1
 }
 @keyframes quoteReveal {
   from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Smooth page content fade-in on navigation */
+main#main {
+  animation: contentFadeIn 300ms var(--ease-soft);
+}
+@keyframes contentFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 

@@ -19,7 +19,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://the-huma-edit.vercel.app",
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://human-edit.vercel.app",
   ),
   title: {
     default: "The Human Edit - By humans. For humans.",

@@ -73,18 +73,20 @@ export function Highlighter({ articleId }: { articleId: string }) {
           ]);
         }
       } else {
-        const next = [
-          { id: `local-${Date.now()}`, text, note, articleId },
-          ...existing,
-        ];
-        setExisting(next);
-        localStorage.setItem(
-          `hume-hl-${articleId}`,
-          JSON.stringify(next),
-        );
+        setExisting((prev) => {
+          const next = [
+            { id: `local-${Date.now()}`, text, note, articleId },
+            ...prev,
+          ];
+          localStorage.setItem(
+            `hume-hl-${articleId}`,
+            JSON.stringify(next),
+          );
+          return next;
+        });
       }
     },
-    [articleId, signedIn, existing],
+    [articleId, signedIn],
   );
 
   // selection listener : position a popover near the selection

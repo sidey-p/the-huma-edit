@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/browser";
 import { ThemeProvider } from "./ThemeProvider";
@@ -21,6 +22,7 @@ export function SiteScripts() {
     <>
       <ThemeProvider />
       <FirstLoad />
+      <RouteLoader />
       <Reveal />
       <MastheadCondense />
       <CursorDot />
@@ -129,6 +131,43 @@ function FirstLoad() {
       )}
       {showSpinner && (
         <div className="quote-loader" aria-hidden="true">
+          <div className="quote-brand">The Human Edit</div>
+          <div className="quote-divider">
+            <span /><span /><span />
+          </div>
+          {quote && <blockquote className="quote-text">{quote}</blockquote>}
+        </div>
+      )}
+    </>
+  );
+}
+
+/** Shows quote loader during client-side route transitions. */
+function RouteLoader() {
+  const pathname = usePathname();
+  const [loading, setLoading] = useState(false);
+  const [quote, setQuote] = useState<string | null>(null);
+  const prevPath = useRef(pathname);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    if (pathname === prevPath.current) return;
+    prevPath.current = pathname;
+
+    setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
+    setLoading(true);
+
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setLoading(false), 400);
+
+    return () => clearTimeout(timer.current);
+  }, [pathname]);
+
+  return (
+    <>
+      <div className={`route-progress ${loading ? "active" : ""}`} />
+      {loading && (
+        <div className="quote-loader" aria-hidden="true" style={{ opacity: 1 }}>
           <div className="quote-brand">The Human Edit</div>
           <div className="quote-divider">
             <span /><span /><span />
