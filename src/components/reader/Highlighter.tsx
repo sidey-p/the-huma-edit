@@ -91,7 +91,6 @@ export function Highlighter({ articleId }: { articleId: string }) {
 
   // selection listener : position a popover near the selection
   useEffect(() => {
-    if (!authChecked) return;
     const onUp = () => {
       const sel = window.getSelection();
       const text = sel?.toString().trim() ?? "";
@@ -109,7 +108,7 @@ export function Highlighter({ articleId }: { articleId: string }) {
     };
     document.addEventListener("mouseup", onUp);
     return () => document.removeEventListener("mouseup", onUp);
-  }, [authChecked]);
+  }, []);
 
   // resume-restore: re-wrap stored highlights visually (simple mark pass)
   useEffect(() => {

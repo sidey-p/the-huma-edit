@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 
 /**
  * THE HUMAN EDIT - Article renderer (section 7, 46)
@@ -124,7 +125,7 @@ function LinksBlock({ links }: { links: EditorialLink[] }) {
       <ul className="mt-2 space-y-2.5">
         {links.map((l) => (
           <li key={l.slug}>
-            <a
+            <Link
               href={`/articles/${l.slug}`}
               className="group block"
             >
@@ -137,7 +138,7 @@ function LinksBlock({ links }: { links: EditorialLink[] }) {
                   {l.dek.length > 120 ? "…" : ""}
                 </span>
               )}
-            </a>
+            </Link>
           </li>
         ))}
       </ul>
@@ -223,9 +224,17 @@ function applyMarks(text: string, marks: Mark[] | undefined): ReactNode {
         break;
       case "link": {
         const href = (mark.attrs?.href as string) ?? "#";
+        const isInternal = href.startsWith("/");
+        if (isInternal) {
+          return (
+            <Link href={href} className="underline decoration-gold underline-offset-2 hover:text-accent transition-colors">
+              {result}
+            </Link>
+          );
+        }
         return (
-          <a href={href} className="underline decoration-gold underline-offset-2">
-            {text}
+          <a href={href} className="underline decoration-gold underline-offset-2 hover:text-accent transition-colors" target="_blank" rel="noopener noreferrer">
+            {result}
           </a>
         );
       }

@@ -1307,6 +1307,14 @@ main#main {
   padding: 1rem;
   animation: fadeUp 200ms var(--ease-soft);
 }
+[data-theme="dark"] .appearance-pop {
+  background: var(--paper-raised);
+  border-color: var(--rule-strong);
+  box-shadow: 0 18px 36px -10px rgba(0,0,0,0.6);
+  color: var(--ink);
+}
+.appearance-pop legend { color: var(--ink-soft); }
+.appearance-pop fieldset { border: none; margin: 0; padding: 0; }
 
 /* ============================================================
    STUDIO COMPOSER HELPERS
