@@ -744,8 +744,9 @@ article[data-reading-theme] {
   color: var(--reading-ink-muted, var(--ink-soft));
 }
 .article-body a {
-  color: var(--gold);
-  text-decoration-color: color-mix(in srgb, var(--gold) 40%, transparent);
+  color: var(--orange);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--orange) 40%, transparent);
   text-underline-offset: 3px;
   transition: color var(--dur-fast) var(--ease-soft), text-decoration-color var(--dur-fast) var(--ease-soft);
 }
@@ -933,7 +934,7 @@ article[data-reading-theme="light"] { --reading-bg: #ffffff; --reading-ink: #1c1
 /* article body in dark mode */
 [data-theme="dark"] .article-body { color: #e8e5de; }
 [data-theme="dark"] .article-body p { color: #e8e5de; }
-[data-theme="dark"] .article-body a { color: var(--gold); }
+[data-theme="dark"] .article-body a { color: var(--orange); }
 [data-theme="dark"] .article-body h1, [data-theme="dark"] .article-body h2,
 [data-theme="dark"] .article-body h3, [data-theme="dark"] .article-body h4 { color: #efece2; }
 [data-theme="dark"] .article-body blockquote { color: #b3aea0; border-left-color: var(--gold); }
@@ -1538,12 +1539,20 @@ main#main {
 .glossary-trigger {
   position: relative;
   display: inline;
-  border-bottom: 1.5px dashed var(--gold);
+  color: var(--ink);
+  border-bottom: 2px dashed var(--gold);
   cursor: help;
-  transition: border-color var(--dur-fast) var(--ease-soft);
+  transition: border-color var(--dur-fast) var(--ease-soft), background var(--dur-fast) var(--ease-soft);
 }
 .glossary-trigger:hover {
   border-color: var(--orange);
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+}
+[data-theme="dark"] .glossary-trigger {
+  color: var(--ink);
+}
+[data-theme="dark"] .glossary-trigger:hover {
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
 }
 
 .glossary-tooltip {
