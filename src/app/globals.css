@@ -506,7 +506,7 @@ h1, h2, h3, p { margin: 0; }
   line-height: 1.12;
   transition: color var(--dur-fast) var(--ease-soft);
 }
-.feature-story a:hover h3, .feature-story:focus-within h3 { color: var(--gold); }
+.feature-story a:hover h3, .feature-story:focus-within h3 { color: var(--orange); filter: brightness(1.08); }
 .feature-story p.dek {
   margin-top: 0.7rem;
   max-width: var(--measure);
@@ -747,6 +747,11 @@ article[data-reading-theme] {
   color: var(--gold);
   text-decoration-color: color-mix(in srgb, var(--gold) 40%, transparent);
   text-underline-offset: 3px;
+  transition: color var(--dur-fast) var(--ease-soft), text-decoration-color var(--dur-fast) var(--ease-soft);
+}
+.article-body a:hover {
+  color: var(--orange);
+  text-decoration-color: var(--orange);
 }
 
 /* ============================================================
@@ -1079,7 +1084,10 @@ main#main {
    MOBILE MENU PANEL
    ============================================================ */
 
-.masthead { position: relative; }
+/* Mobile menu panel — position relative only on phones so sticky still works on desktop */
+@media (max-width: 640px) {
+  .masthead { position: relative; }
+}
 .primary-nav[data-open="true"] {
   position: fixed;
   top: 64px; left: 0; right: 0;

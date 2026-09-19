@@ -227,13 +227,13 @@ function applyMarks(text: string, marks: Mark[] | undefined): ReactNode {
         const isInternal = href.startsWith("/");
         if (isInternal) {
           return (
-            <Link href={href} className="underline decoration-gold underline-offset-2 hover:text-accent transition-colors">
+            <Link href={href}>
               {result}
             </Link>
           );
         }
         return (
-          <a href={href} className="underline decoration-gold underline-offset-2 hover:text-accent transition-colors" target="_blank" rel="noopener noreferrer">
+          <a href={href} target="_blank" rel="noopener noreferrer">
             {result}
           </a>
         );
