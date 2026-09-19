@@ -249,7 +249,7 @@ function rippleFrom(el: HTMLElement) {
   dot.style.width = dot.style.height = size + "px";
   dot.style.left = x + "px";
   dot.style.top = y + "px";
-  dot.style.opacity = "0.06";
+  dot.style.opacity = "0.12";
   document.body.appendChild(dot);
   requestAnimationFrame(() => {
     dot.style.transition = "transform 650ms cubic-bezier(.4,0,.2,1)";

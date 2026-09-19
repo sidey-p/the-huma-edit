@@ -6,6 +6,7 @@ import { ArticleBody } from "@/components/article/ArticleBody";
 import { ArticleContents } from "@/components/article/ArticleContents";
 import { SaveButton } from "@/components/reader/SaveButton";
 import { ReadingControls } from "@/components/reader/ReadingControls";
+import { ShareButtons } from "@/components/reader/ShareButtons";
 import { ReadingProgressTracker } from "@/components/reader/ReadingProgressTracker";
 import { Highlighter } from "@/components/reader/Highlighter";
 import { BookmarkFab, ResumeAnchor } from "@/components/reader/BookmarkFab";
@@ -119,6 +120,7 @@ export default async function ArticlePage({
             </div>
             {/* 7.4 persistent but quiet reading controls */}
             <div className="flex items-center gap-3">
+              <ShareButtons title={article.title} slug={article.slug} dek={article.dek} />
               <ReadingControls />
               <SaveButton articleId={article._id} />
             </div>
