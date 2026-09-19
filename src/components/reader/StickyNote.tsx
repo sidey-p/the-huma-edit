@@ -28,7 +28,7 @@ export function StickyNote({ text, onSave, onCancel }: StickyNoteProps) {
   };
 
   return (
-    <div className="sticky-note-host">
+    <div className="sticky-note-host" onMouseDown={(e) => e.stopPropagation()}>
       {/* Desktop: right-side sticky note */}
       <div className="sticky-note-desktop">
         <div className="sticky-note-paper">

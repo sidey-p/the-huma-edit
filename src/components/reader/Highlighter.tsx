@@ -93,7 +93,11 @@ export function Highlighter({ articleId }: { articleId: string }) {
 
   // selection listener : position a popover near the selection
   useEffect(() => {
-    const onUp = () => {
+    const onUp = (e: MouseEvent) => {
+      // Don't open popover if clicking inside the popover or sticky note
+      const target = e.target as HTMLElement;
+      if (target.closest("[role='toolbar']") || target.closest(".sticky-note-host")) return;
+
       const sel = window.getSelection();
       const text = sel?.toString().trim() ?? "";
       if (!sel || text.length < 8 || !sel.rangeCount) {
@@ -108,9 +112,26 @@ export function Highlighter({ articleId }: { articleId: string }) {
         text,
       });
     };
+
+    const onDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Close popover when clicking outside it
+      if (popover && !target.closest("[role='toolbar']")) {
+        setPopover(null);
+      }
+      // Close sticky note when clicking outside it
+      if (noteMode && !target.closest(".sticky-note-host")) {
+        setNoteMode(null);
+      }
+    };
+
     document.addEventListener("mouseup", onUp);
-    return () => document.removeEventListener("mouseup", onUp);
-  }, []);
+    document.addEventListener("mousedown", onDown);
+    return () => {
+      document.removeEventListener("mouseup", onUp);
+      document.removeEventListener("mousedown", onDown);
+    };
+  }, [popover, noteMode]);
 
   // resume-restore: re-wrap stored highlights visually (simple mark pass)
   useEffect(() => {
@@ -168,6 +189,7 @@ export function Highlighter({ articleId }: { articleId: string }) {
           }}
           role="toolbar"
           aria-label="Highlight actions"
+          onMouseDown={(e) => e.stopPropagation()}
         >
           <button
             onClick={() => {

@@ -163,8 +163,7 @@ export async function fetchArticleBySlug(slug: string): Promise<ArticleDetail | 
   const [words, links, ads] = await Promise.all([
     supabase
       .from("vocabulary_words")
-      .select("id, word, part_of_speech, plain_meaning, pronunciation, usage_example")
-      .eq("source_article_id", a.id),
+      .select("id, word, part_of_speech, plain_meaning, pronunciation, usage_example"),
     supabase
       .from("article_links")
       .select("label, position, to_article:articles!article_links_to_article_id_fkey ( slug, title, dek )")
