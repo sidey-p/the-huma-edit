@@ -8,6 +8,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/browser";
+import { StickyNote } from "./StickyNote";
 
 type SavedHighlight = {
   id: string;
@@ -21,6 +22,7 @@ export function Highlighter({ articleId }: { articleId: string }) {
   const [authChecked, setAuthChecked] = useState(false);
   const [existing, setExisting] = useState<SavedHighlight[]>([]);
   const [popover, setPopover] = useState<{ x: number; y: number; text: string } | null>(null);
+  const [noteMode, setNoteMode] = useState<{ x: number; y: number; text: string } | null>(null);
 
   // auth + load existing highlights
   useEffect(() => {
@@ -179,8 +181,7 @@ export function Highlighter({ articleId }: { articleId: string }) {
           </button>
           <button
             onClick={() => {
-              const note = window.prompt("Note for this passage:");
-              if (note) void save(popover.text, note);
+              setNoteMode(popover);
               setPopover(null);
             }}
             className="rounded-editorial-sm px-2.5 py-1 text-xs transition-colors hover:bg-rule"
@@ -188,6 +189,18 @@ export function Highlighter({ articleId }: { articleId: string }) {
             Note
           </button>
         </div>
+      )}
+
+      {/* sticky note for adding notes */}
+      {noteMode && (
+        <StickyNote
+          text={noteMode.text}
+          onSave={(text, note) => {
+            void save(text, note);
+            setNoteMode(null);
+          }}
+          onCancel={() => setNoteMode(null)}
+        />
       )}
 
       {/* saved list */}
