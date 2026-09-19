@@ -127,7 +127,7 @@ export interface ArticleDetail {
   corners: Array<{ id: string; slug: string; name: string }>;
   author: { slug: string; displayName: string; isGhost: boolean } | null;
   topics: Array<{ id: string; slug: string; name: string }>;
-  wordsToNotice: Array<{ _id: string; word: string; partOfSpeech: string | null; plainMeaning: string }>;
+  wordsToNotice: Array<{ _id: string; word: string; partOfSpeech: string | null; plainMeaning: string; pronunciation: string | null; usageExample: string | null }>;
   editorialLinks: Array<{ slug: string; title: string; dek: string | null; label: string | null }>;
   ads: Array<{
     id: string;
@@ -163,7 +163,7 @@ export async function fetchArticleBySlug(slug: string): Promise<ArticleDetail | 
   const [words, links, ads] = await Promise.all([
     supabase
       .from("vocabulary_words")
-      .select("id, word, part_of_speech, plain_meaning")
+      .select("id, word, part_of_speech, plain_meaning, pronunciation, usage_example")
       .eq("source_article_id", a.id),
     supabase
       .from("article_links")
@@ -211,6 +211,8 @@ export async function fetchArticleBySlug(slug: string): Promise<ArticleDetail | 
       word: w.word as string,
       partOfSpeech: str(w.part_of_speech),
       plainMeaning: w.plain_meaning as string,
+      pronunciation: str(w.pronunciation),
+      usageExample: str(w.usage_example),
     })),
     editorialLinks: linksData
       .filter((l) => l.to_article)

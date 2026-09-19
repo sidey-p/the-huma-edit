@@ -1303,6 +1303,135 @@ main#main {
 }
 
 /* ============================================================
+   TL;DR SUMMARY BOX
+   ============================================================ */
+
+.tldr-box {
+  border: 1px solid var(--gold);
+  background: color-mix(in srgb, var(--gold) 5%, var(--paper-raised));
+  padding: 1rem 1.25rem;
+  margin-bottom: 2rem;
+  animation: fadeUp 300ms var(--ease-soft);
+}
+[data-theme="dark"] .tldr-box {
+  background: color-mix(in srgb, var(--gold) 8%, var(--paper-raised));
+}
+.tldr-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+}
+.tldr-label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--step--1);
+  color: var(--gold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.tldr-chevron {
+  color: var(--gold);
+  transition: transform 200ms var(--ease-soft);
+}
+.tldr-text {
+  margin-top: 0.6rem;
+  color: var(--ink-soft);
+  font-size: var(--step-0);
+  line-height: 1.6;
+}
+
+/* ============================================================
+   GLOSSARY TOOLTIP
+   ============================================================ */
+
+.glossary-trigger {
+  position: relative;
+  display: inline;
+  border-bottom: 1.5px dashed var(--gold);
+  cursor: help;
+  transition: border-color var(--dur-fast) var(--ease-soft);
+}
+.glossary-trigger:hover {
+  border-color: var(--orange);
+}
+
+.glossary-tooltip {
+  position: absolute;
+  z-index: 50;
+  width: min(22rem, calc(100vw - 2rem));
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  box-shadow: 0 12px 32px -8px rgba(0,0,0,0.35);
+  padding: 1rem 1.1rem;
+  animation: fadeUp 180ms var(--ease-soft);
+  pointer-events: auto;
+}
+.glossary-tooltip.above {
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+.glossary-tooltip.below {
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+[data-theme="dark"] .glossary-tooltip {
+  background: var(--paper-raised);
+  border-color: var(--rule-strong);
+  box-shadow: 0 12px 32px -4px rgba(0,0,0,0.5);
+}
+
+.glossary-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.glossary-word {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--step-1);
+  color: var(--orange);
+}
+.glossary-pos {
+  font-size: var(--step--1);
+  color: var(--ink-faint);
+  font-style: italic;
+}
+.glossary-pronunciation {
+  display: block;
+  font-size: var(--step--1);
+  color: var(--ink-faint);
+  margin-top: 0.15rem;
+  font-style: italic;
+}
+.glossary-meaning {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: var(--step-0);
+  color: var(--ink);
+  line-height: 1.55;
+}
+.glossary-example {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: var(--step--1);
+  color: var(--ink-soft);
+  font-style: italic;
+  border-left: 2px solid var(--gold);
+  padding-left: 0.75rem;
+}
+.glossary-hint {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.68rem;
+  color: var(--ink-faint);
+  text-align: right;
+}
+
+/* ============================================================
    SHARE BUTTONS
    ============================================================ */
 

@@ -7,6 +7,7 @@ import { ArticleContents } from "@/components/article/ArticleContents";
 import { SaveButton } from "@/components/reader/SaveButton";
 import { ReadingControls } from "@/components/reader/ReadingControls";
 import { ShareButtons } from "@/components/reader/ShareButtons";
+import { TldrSummary } from "@/components/reader/TldrSummary";
 import { ReadingProgressTracker } from "@/components/reader/ReadingProgressTracker";
 import { Highlighter } from "@/components/reader/Highlighter";
 import { BookmarkFab, ResumeAnchor } from "@/components/reader/BookmarkFab";
@@ -131,10 +132,13 @@ export default async function ArticlePage({
         <div className="mx-auto max-w-5xl px-4 pb-24 sm:px-6">
           <div className="flex flex-col gap-6 lg:flex-row lg:gap-12">
             <div className="mx-auto max-w-3xl min-w-0">
+              {article.dek && <TldrSummary text={article.dek} />}
+
               <ArticleBody
                 doc={article.content_json as never}
                 ads={article.ads}
                 links={article.editorialLinks}
+                words={article.wordsToNotice}
               />
 
               <Highlighter articleId={article._id} />

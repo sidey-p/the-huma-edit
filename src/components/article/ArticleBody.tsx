@@ -1,10 +1,17 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { createContext, useContext } from "react";
 import Link from "next/link";
+import { GlossaryTooltip, type GlossaryWord } from "@/components/reader/GlossaryTooltip";
+
+const GlossaryContext = createContext<GlossaryWord[]>([]);
 
 /**
  * THE HUMAN EDIT - Article renderer (section 7, 46)
  * Renders Tiptap JSON documents as server-rendered React.
- * Also renders mid-article ad slots and editorial link blocks.
+ * Also renders mid-article ad slots, editorial link blocks,
+ * and glossary tooltips for vocabulary words.
  */
 
 interface TiptapDoc {
@@ -50,10 +57,12 @@ export function ArticleBody({
   doc,
   ads = [],
   links = [],
+  words = [],
 }: {
   doc: TiptapDoc | null | undefined;
   ads?: AdSlot[];
   links?: EditorialLink[];
+  words?: GlossaryWord[];
 }) {
   if (!doc?.content?.length) {
     return null;
@@ -83,11 +92,13 @@ export function ArticleBody({
   }
 
   return (
-    <div className="article-body">
-      {topAd && <AdBlock ad={topAd} />}
-      {nodes}
-      {endAd && <AdBlock ad={endAd} />}
-    </div>
+    <GlossaryContext.Provider value={words}>
+      <div className="article-body">
+        {topAd && <AdBlock ad={topAd} />}
+        {nodes}
+        {endAd && <AdBlock ad={endAd} />}
+      </div>
+    </GlossaryContext.Provider>
   );
 }
 
@@ -196,17 +207,66 @@ function renderInline(content: TiptapNode[] | undefined): ReactNode {
 
 function RenderInline({ node }: { node: TiptapNode }) {
   if (node.type === "text") {
-    return <>{applyMarks(node.text ?? "", node.marks)}</>;
+    const words = useContext(GlossaryContext);
+    return <>{applyMarks(node.text ?? "", node.marks, words)}</>;
   }
   if (node.type === "hardBreak") return <br />;
   // Nested structure inside inline content - recurse
   return <>{renderInline(node.content)}</>;
 }
 
-function applyMarks(text: string, marks: Mark[] | undefined): ReactNode {
+/** Wrap vocabulary words in GlossaryTooltip, preserving surrounding text. */
+function wrapGlossaryWords(text: string, words: GlossaryWord[]): ReactNode {
+  if (!words.length || !text) return text;
+
+  // Build a regex that matches any vocabulary word (whole word, case-insensitive)
+  const pattern = words
+    .map((w) => w.word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("|");
+  const regex = new RegExp(`\\b(${pattern})\\b`, "gi");
+
+  const parts: ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(text)) !== null) {
+    // Text before the match
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    // Find the glossary word data (case-insensitive lookup)
+    const matchedWord = match[0];
+    const wordData = words.find(
+      (w) => w.word.toLowerCase() === matchedWord.toLowerCase()
+    );
+    if (wordData) {
+      parts.push(
+        <GlossaryTooltip key={`glossary-${match.index}`} word={wordData}>
+          {matchedWord}
+        </GlossaryTooltip>
+      );
+    } else {
+      parts.push(matchedWord);
+    }
+    lastIndex = regex.lastIndex;
+  }
+
+  // Remaining text after last match
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length === 1 ? parts[0] : <>{parts}</>;
+}
+
+function applyMarks(text: string, marks: Mark[] | undefined, words: GlossaryWord[]): ReactNode {
   if (!text) return null;
-  if (!marks?.length) return text;
-  let result: ReactNode = text;
+
+  // First, wrap any vocabulary words in the raw text
+  const withGlossary = wrapGlossaryWords(text, words);
+
+  if (!marks?.length) return withGlossary;
+  let result: ReactNode = withGlossary;
   for (const mark of marks) {
     switch (mark.type) {
       case "bold":
