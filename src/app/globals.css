@@ -770,32 +770,112 @@ article[data-reading-theme] {
 }
 
 /* ============================================================
-   Responsive
+   RESPONSIVE BREAKPOINTS
    ============================================================ */
 
+/* Tablet (768px–900px) */
 @media (max-width: 900px) {
-  .hero-grid { grid-template-columns: 1fr; }
-  .hero-side { flex-direction: row; overflow-x: auto; padding-bottom: 0.4rem; }
-  .ticket { min-width: 220px; }
-  .edit-grid { grid-template-columns: 1fr; }
-  .corners-rail { grid-template-columns: repeat(2, 1fr); }
-  .footer-cols { grid-template-columns: repeat(2, 1fr); }
-  .cursor-dot { display: none; }
+  .section { padding-block: clamp(2rem, 5vw, 3.5rem); }
+  .hero { padding-block: clamp(2.5rem, 7vw, 5rem) clamp(2rem, 5vw, 3.5rem); }
+  .section-head h2 { font-size: clamp(1.4rem, 3vw, 2rem); }
+  .feature-story h3 { font-size: clamp(1.3rem, 2.5vw, 1.8rem); }
+  .masthead-row { gap: 1rem; }
+  .article-body { font-size: 1rem; }
+  .article-body h2 { font-size: 1.4rem; margin-block: 2rem 0.75rem; }
+  .article-body h3 { font-size: 1.15rem; margin-block: 1.5rem 0.5rem; }
+  .article-body blockquote { font-size: 1.1rem; }
+  .article-body p { margin-block: 0.85rem; }
+  .display-lg { font-size: clamp(1.5rem, 3.5vw, 2rem); }
 }
 
+/* Phone (≤640px) — everything fills the screen */
 @media (max-width: 640px) {
-  .masthead .primary-nav { display: none; } /* desktop nav hidden; SiteScripts panel takes over */
-  .corners-rail { grid-template-columns: 1fr; }
-  .writing-row { grid-template-columns: 1fr; }
-  .writing-row .meta { text-align: left; }
-  .head-actions { gap: 0.4rem; }
-  .masthead-row { gap: 0.75rem; }
+  /* Remove max-width constraints so content fills screen */
+  .wrap {
+    max-width: none;
+    padding-inline: 1rem;
+  }
+
+  /* Hero */
+  .hero { padding-block: 2rem 1.5rem; }
+  .hero-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+  .hero h1 { font-size: clamp(2rem, 7vw, 3rem); }
+  .hero .lede { font-size: var(--step-0); }
+  .hero-ctas { width: 100%; }
+  .hero-ctas .btn { flex: 1; justify-content: center; }
+  .hero-side { flex-direction: row; overflow-x: auto; padding-bottom: 0.4rem; -webkit-overflow-scrolling: touch; }
+  .ticket { min-width: 180px; }
+
+  /* Header */
+  .masthead .primary-nav { display: none; }
+  .masthead-row { gap: 0.75rem; padding-block: 0.9rem; }
   .wordmark { font-size: var(--step-0); }
+  .wordmark small { font-size: 0.55rem; }
+  .head-actions { gap: 0.4rem; }
+
+  /* Sections */
+  .section { padding-block: 1.5rem; }
+  .section-head { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  .section-head h2 { font-size: clamp(1.3rem, 4vw, 1.8rem); }
+
+  /* Edit grid */
+  .edit-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+  .feature-story h3 { font-size: clamp(1.2rem, 3.5vw, 1.6rem); }
+  .side-list a { padding-block: 0.85rem; }
+
+  /* Corners */
+  .corners-rail { grid-template-columns: 1fr; gap: 0.8rem; }
+  .corner-card { padding: 1.2rem 1rem; }
+
+  /* Writing list */
+  .writing-list { padding-inline: 0; }
+  .writing-row { grid-template-columns: 1fr; gap: 0.5rem; }
+  .writing-row .meta { text-align: left; }
+  .writing-row h4 { font-size: var(--step-0); }
+
+  /* Article page — remove all max-width, fill screen */
+  .article-body { padding-inline: 0; font-size: 0.95rem; line-height: 1.6; }
+  .article-body h2 { font-size: 1.25rem; }
+  .article-body h3 { font-size: 1.05rem; }
+  .article-body blockquote { font-size: 1rem; padding-inline-start: 1rem; }
+  .article-body pre { font-size: 0.8rem; padding: 0.75rem; overflow-x: auto; }
+
+  /* Override Tailwind max-width on article page */
+  .mx-auto.max-w-5xl { max-width: none; padding-inline: 1rem; }
+  .mx-auto.max-w-3xl { max-width: none; }
+
+  /* Display */
+  .display-lg { font-size: clamp(1.5rem, 5vw, 2.2rem); }
+
+  /* Panels */
+  .notif-panel { right: 0.5rem; width: min(20rem, calc(100vw - 1.5rem)); }
+  .appearance-pop { width: min(16rem, calc(100vw - 2rem)); right: -0.5rem; }
+  .comment-thread { margin-left: 1rem; }
+
+  /* Footer */
+  footer.site-footer { padding-block: 2rem 1.5rem; }
+  footer.site-footer .wrap { padding-inline: 1rem; }
+  .footer-top { flex-direction: column; gap: 1.5rem; }
+  .footer-cols { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .footer-bottom { flex-direction: column; gap: 0.3rem; }
 }
-/* hamburger only on phones; never on big screens */
-.nav-toggle { display: none; }
-@media (max-width: 640px) {
-  .nav-toggle { display: grid; }
+
+/* Very small phones (≤380px) */
+@media (max-width: 380px) {
+  .hero h1 { font-size: 1.75rem; }
+  .corner-card { padding: 1rem 0.8rem; }
+  .ticket { min-width: 160px; padding: 0.8rem; }
+  .masthead-row { gap: 0.5rem; }
+  .wordmark { font-size: 0.9rem; }
+  .wordmark small { font-size: 0.5rem; letter-spacing: 0.1em; }
+  .head-actions { gap: 0.3rem; }
+  .icon-btn { width: 1.9rem; height: 1.9rem; }
+}
+
+/* Wide screens (≥1200px) */
+@media (min-width: 1200px) {
+  .hero-grid { gap: clamp(3rem, 5vw, 5rem); }
+  .wrap { max-width: 80rem; }
 }
 
 /* ============================================================
@@ -1245,67 +1325,11 @@ main#main {
   .masthead-row { gap: 1rem; }
 }
 
-/* Phone */
+/* Hamburger only on phones */
+.nav-toggle { display: none; }
 @media (max-width: 640px) {
-  .writing-list { padding-inline: 0; }
-  .article-body { padding-inline: 0; }
-  .corners-rail { gap: 0.8rem; }
-  .corner-card { padding: 1.2rem 1rem; }
-  .section-head { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-  .hero-ctas { width: 100%; }
-  .hero-ctas .btn { flex: 1; justify-content: center; }
-  .edit-grid { gap: 1.5rem; }
-  .side-list a { padding-block: 0.85rem; }
-  .notif-panel { right: 0.5rem; width: min(20rem, calc(100vw - 1.5rem)); }
-  .comment-thread { margin-left: 1rem; }
-  .ticket { min-width: 180px; }
-  footer.site-footer .wrap { padding-inline: 1rem; }
-  .footer-cols { gap: 1rem; }
-  .hero h1 { font-size: clamp(2rem, 7vw, 3rem); }
-  .hero .lede { font-size: var(--step-0); }
-  .display-lg { font-size: clamp(1.5rem, 5vw, 2.2rem); }
-  .section-head h2 { font-size: clamp(1.3rem, 4vw, 1.8rem); }
-  .feature-story h3 { font-size: clamp(1.2rem, 3.5vw, 1.6rem); }
-  .writing-row h4 { font-size: var(--step-0); }
-  .appearance-pop { width: min(16rem, calc(100vw - 2rem)); right: -0.5rem; }
+  .nav-toggle { display: grid; }
 }
-
-/* Very small phones */
-@media (max-width: 380px) {
-  .hero h1 { font-size: 1.75rem; }
-  .corner-card { padding: 1rem 0.8rem; }
-  .ticket { min-width: 160px; padding: 0.8rem; }
-  .masthead-row { gap: 0.5rem; }
-  .wordmark { font-size: 0.9rem; }
-  .wordmark small { font-size: 0.55rem; }
-  .head-actions { gap: 0.3rem; }
-}
-
-/* Wide screens */
-@media (min-width: 1200px) {
-  .hero-grid { gap: clamp(3rem, 5vw, 5rem); }
-  .wrap { max-width: 80rem; }
-}
-
-/* article reading layout responsive */
-@media (max-width: 900px) {
-  .article-body { font-size: 1rem; }
-  .article-body h2 { font-size: 1.4rem; margin-block: 2rem 0.75rem; }
-  .article-body h3 { font-size: 1.15rem; margin-block: 1.5rem 0.5rem; }
-  .article-body blockquote { font-size: 1.1rem; }
-  .article-body p { margin-block: 0.85rem; }
-}
-@media (max-width: 640px) {
-  .article-body { font-size: 0.95rem; line-height: 1.6; }
-  .article-body h2 { font-size: 1.25rem; }
-  .article-body h3 { font-size: 1.05rem; }
-  .article-body blockquote { font-size: 1rem; padding-inline-start: 1rem; }
-  .article-body pre { font-size: 0.8rem; padding: 0.75rem; overflow-x: auto; }
-}
-
-/* ============================================================
-   HIGHLIGHT POPOVER
-   ============================================================ */
 
 @media (max-width: 640px) {
   .highlight-popover {
