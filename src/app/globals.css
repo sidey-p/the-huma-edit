@@ -1746,6 +1746,26 @@ main#main {
   box-shadow: 0 18px 36px -10px rgba(0,0,0,0.6);
   color: var(--ink);
 }
+
+/* Mobile: bottom sheet */
+@media (max-width: 640px) {
+  .appearance-pop {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    border-radius: 16px 16px 0 0;
+    border-bottom: none;
+    box-shadow: 0 -8px 32px -8px rgba(0,0,0,0.3);
+    animation: slideUp 250ms var(--ease-soft);
+    padding: 1.5rem 1rem calc(1.5rem + env(safe-area-inset-bottom)) 1rem;
+  }
+}
+
 .appearance-pop legend { color: var(--ink-soft); font-weight: 500; font-size: var(--step--1); }
 .appearance-pop fieldset { border: none; margin: 0; padding: 0; }
 .appearance-pop button { font-weight: 500; }
