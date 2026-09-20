@@ -93,27 +93,33 @@ export function Highlighter({ articleId }: { articleId: string }) {
 
   // selection listener : position a popover near the selection
   useEffect(() => {
-    const onUp = (e: MouseEvent) => {
+    const isMobile = typeof window !== "undefined" && 
+      (window.matchMedia("(hover: none)").matches || window.innerWidth < 768);
+
+    const getSelectionRect = (sel: Selection | null) => {
+      if (!sel || !sel.rangeCount) return null;
+      const range = sel.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) return null;
+      return {
+        x: rect.left + rect.width / 2,
+        y: rect.top,
+        text: sel.toString().trim(),
+      };
+    };
+
+    const onUp = (e: MouseEvent | TouchEvent) => {
       // Don't open popover if clicking inside the popover or sticky note
       const target = e.target as HTMLElement;
       if (target.closest("[role='toolbar']") || target.closest(".sticky-note-host")) return;
 
       const sel = window.getSelection();
-      const text = sel?.toString().trim() ?? "";
-      if (!sel || text.length < 8 || !sel.rangeCount) {
-        return;
-      }
-      const range = sel.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      if (rect.width === 0 && rect.height === 0) return;
-      setPopover({
-        x: rect.left + rect.width / 2,
-        y: rect.top,
-        text,
-      });
+      const rect = getSelectionRect(sel);
+      if (!rect || rect.text.length < 8) return;
+      setPopover(rect);
     };
 
-    const onDown = (e: MouseEvent) => {
+    const onDown = (e: MouseEvent | TouchEvent) => {
       const target = e.target as HTMLElement;
       // Close popover when clicking outside it
       if (popover && !target.closest("[role='toolbar']")) {
@@ -125,11 +131,21 @@ export function Highlighter({ articleId }: { articleId: string }) {
       }
     };
 
+    // Desktop: mouseup
     document.addEventListener("mouseup", onUp);
     document.addEventListener("mousedown", onDown);
+
+    // Mobile: touchend (after selection is made)
+    if (isMobile) {
+      document.addEventListener("touchend", onUp, { passive: true });
+    }
+
     return () => {
       document.removeEventListener("mouseup", onUp);
       document.removeEventListener("mousedown", onDown);
+      if (isMobile) {
+        document.removeEventListener("touchend", onUp);
+      }
     };
   }, [popover, noteMode]);
 

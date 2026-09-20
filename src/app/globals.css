@@ -106,6 +106,29 @@
   --accent-ink: #161511;
 }
 
+/* Global smooth scroll with butter easing */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for webkit */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--ink) 30%, transparent);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--ink) 50%, transparent);
+}
+
+/* Disable native context menu on article body for custom highlight */
+.article-body {
+  -webkit-touch-callout: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* ============================================================
    TAILWIND THEME MAPPING
    ============================================================ */
@@ -792,11 +815,23 @@ article[data-reading-theme] {
 
 /* Phone (≤640px) — everything fills the screen */
 @media (max-width: 640px) {
-  /* Remove max-width constraints so content fills screen */
-  .wrap {
-    max-width: none !important;
-    padding-inline: 1rem !important;
+  /* Masthead: allow wrapping so head-actions don't overflow */
+  .masthead-row {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-block: 0.9rem;
   }
+  .masthead .primary-nav { display: none; }
+  .wordmark { font-size: var(--step-0); }
+  .wordmark small { font-size: 0.55rem; }
+  .head-actions { 
+    gap: 0.4rem; 
+    flex-wrap: wrap; 
+    justify-content: flex-end;
+    width: auto;
+    max-width: calc(100% - 80px); /* leave space for wordmark */
+  }
+  .icon-btn { width: 1.9rem; height: 1.9rem; }
 
   /* Hero */
   .hero { padding-block: 2rem 1.5rem; }
@@ -873,11 +908,11 @@ article[data-reading-theme] {
   .hero h1 { font-size: 1.75rem; }
   .corner-card { padding: 1rem 0.8rem; }
   .ticket { min-width: 160px; padding: 0.8rem; }
-  .masthead-row { gap: 0.5rem; }
+  .masthead-row { gap: 0.4rem; padding-block: 0.7rem; }
   .wordmark { font-size: 0.9rem; }
   .wordmark small { font-size: 0.5rem; letter-spacing: 0.1em; }
-  .head-actions { gap: 0.3rem; }
-  .icon-btn { width: 1.9rem; height: 1.9rem; }
+  .head-actions { gap: 0.25rem; }
+  .icon-btn { width: 1.7rem; height: 1.7rem; }
 }
 
 /* Prevent horizontal overflow on ALL mobile screens */
