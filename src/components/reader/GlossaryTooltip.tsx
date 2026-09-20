@@ -2,7 +2,8 @@
 
 /**
  * Glossary tooltip — hover on desktop, tap on mobile.
- * Shows word meaning, pronunciation, and usage example in a floating card.
+ * Fully responsive: fixed-position on mobile, absolute on desktop.
+ * Stays within viewport on all screen sizes.
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -22,45 +23,100 @@ interface GlossaryTooltipProps {
 
 export function GlossaryTooltip({ word, children }: GlossaryTooltipProps) {
   const [open, setOpen] = useState(false);
-  const [position, setPosition] = useState<"above" | "below">("above");
+  const [mobileMode, setMobileMode] = useState(false);
+  const [posStyle, setPosStyle] = useState<React.CSSProperties>({});
   const triggerRef = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const isMobile = typeof window !== "undefined" && window.matchMedia("(hover: none)").matches;
+  // Detect mobile/touch on mount and on resize
+  useEffect(() => {
+    const check = () => {
+      setMobileMode(window.matchMedia("(hover: none)").matches || window.innerWidth < 768);
+    };
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  const calcPosition = useCallback(() => {
+    if (!triggerRef.current || !tooltipRef.current) return;
+    const trigger = triggerRef.current.getBoundingClientRect();
+    const tip = tooltipRef.current.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    if (mobileMode) {
+      // Mobile: fixed center-bottom of screen
+      setPosStyle({
+        position: "fixed",
+        bottom: "1rem",
+        left: "1rem",
+        right: "1rem",
+        top: "auto",
+        transform: "none",
+        width: "auto",
+        maxHeight: "50vh",
+        overflowY: "auto",
+      });
+    } else {
+      // Desktop: absolute, clamped to viewport
+      const spaceAbove = trigger.top;
+      const spaceBelow = vh - trigger.bottom;
+      const above = spaceAbove > tip.height + 12 && spaceAbove > spaceBelow;
+
+      let left = trigger.left + trigger.width / 2 - tip.width / 2;
+      // Clamp horizontal
+      left = Math.max(8, Math.min(left, vw - tip.width - 8));
+
+      const top = above
+        ? trigger.top - tip.height - 8 + window.scrollY
+        : trigger.bottom + 8 + window.scrollY;
+
+      setPosStyle({
+        position: "absolute",
+        top,
+        left,
+        transform: "none",
+        width: tip.width,
+      });
+    }
+  }, [mobileMode]);
 
   const show = useCallback(() => {
     clearTimeout(timeoutRef.current);
     setOpen(true);
-    // Determine position after render
-    requestAnimationFrame(() => {
-      if (triggerRef.current && tooltipRef.current) {
-        const triggerRect = triggerRef.current.getBoundingClientRect();
-        const tooltipRect = tooltipRef.current.getBoundingClientRect();
-        const spaceAbove = triggerRect.top;
-        setPosition(spaceAbove > tooltipRect.height + 12 ? "above" : "below");
-      }
-    });
-  }, []);
+    requestAnimationFrame(calcPosition);
+  }, [calcPosition]);
 
   const hide = useCallback(() => {
-    if (isMobile) return; // mobile uses tap to toggle
+    if (mobileMode) return;
     timeoutRef.current = setTimeout(() => setOpen(false), 200);
-  }, [isMobile]);
+  }, [mobileMode]);
 
   const toggle = useCallback(() => {
-    if (isMobile) {
-      setOpen((prev) => !prev);
-    }
-  }, [isMobile]);
+    setOpen((prev) => !prev);
+  }, []);
 
   useEffect(() => {
     return () => clearTimeout(timeoutRef.current);
   }, []);
 
-  // Close on outside tap (mobile)
+  // Recalculate on scroll/resize while open
   useEffect(() => {
-    if (!open || !isMobile) return;
+    if (!open) return;
+    const onScroll = () => calcPosition();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [open, calcPosition]);
+
+  // Close on outside tap
+  useEffect(() => {
+    if (!open) return;
     const onDown = (e: MouseEvent | TouchEvent) => {
       const target = e.target as Node;
       if (
@@ -71,12 +127,12 @@ export function GlossaryTooltip({ word, children }: GlossaryTooltipProps) {
       }
     };
     document.addEventListener("mousedown", onDown);
-    document.addEventListener("touchstart", onDown);
+    document.addEventListener("touchstart", onDown, { passive: true });
     return () => {
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("touchstart", onDown);
     };
-  }, [open, isMobile]);
+  }, [open]);
 
   return (
     <span
@@ -100,8 +156,9 @@ export function GlossaryTooltip({ word, children }: GlossaryTooltipProps) {
       {open && (
         <span
           ref={tooltipRef}
-          className={`glossary-tooltip ${position}`}
+          className={`glossary-tooltip ${mobileMode ? "mobile" : "desktop"}`}
           role="tooltip"
+          style={posStyle}
           onMouseEnter={show}
           onMouseLeave={hide}
         >
@@ -118,7 +175,7 @@ export function GlossaryTooltip({ word, children }: GlossaryTooltipProps) {
           {word.usageExample && (
             <span className="glossary-example">&ldquo;{word.usageExample}&rdquo;</span>
           )}
-          <span className="glossary-hint">{isMobile ? "Tap to close" : "Hover to keep open"}</span>
+          <span className="glossary-hint">{mobileMode ? "Tap anywhere to close" : "Hover to keep open"}</span>
         </span>
       )}
     </span>

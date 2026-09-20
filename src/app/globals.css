@@ -1304,6 +1304,22 @@ main#main {
 }
 
 /* ============================================================
+   HIGHLIGHT POPOVER
+   ============================================================ */
+
+@media (max-width: 640px) {
+  .highlight-popover {
+    left: 50% !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: 1rem !important;
+    transform: translateX(-50%) !important;
+    border-radius: 12px 12px 0 0;
+    padding: 0.6rem 1rem !important;
+  }
+}
+
+/* ============================================================
    STICKY NOTE (replaces window.prompt for highlights)
    ============================================================ */
 
@@ -1324,15 +1340,21 @@ main#main {
   .sticky-note-host {
     top: 50%;
     right: 1.5rem;
+    left: auto;
+    bottom: auto;
     transform: translateY(-50%);
     width: min(18rem, calc(100vw - 3rem));
   }
 }
 @media (max-width: 900px) {
   .sticky-note-host {
+    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
+    top: auto;
+    transform: none;
+    width: auto;
     z-index: 50;
   }
 }
@@ -1437,9 +1459,21 @@ main#main {
 
 /* Mobile: inline bottom bar */
 @media (max-width: 900px) {
+  .sticky-note-host {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    transform: none !important;
+    width: auto !important;
+    z-index: 50;
+  }
   .sticky-note-paper {
     border-radius: 12px 12px 0 0;
     transform: none;
+    max-height: 60vh;
+    overflow-y: auto;
   }
 }
 .sticky-note-mobile-paper {
@@ -1566,15 +1600,22 @@ main#main {
   animation: fadeUp 180ms var(--ease-soft);
   pointer-events: auto;
 }
-.glossary-tooltip.above {
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
+/* Desktop: positioned absolutely */
+.glossary-tooltip.desktop {
+  position: absolute;
 }
-.glossary-tooltip.below {
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
+/* Mobile: fixed bottom sheet */
+.glossary-tooltip.mobile {
+  position: fixed;
+  bottom: 1rem !important;
+  left: 1rem !important;
+  right: 1rem !important;
+  top: auto !important;
+  width: auto !important;
+  max-height: 50vh;
+  overflow-y: auto;
+  border-radius: 12px 12px 0 0;
+  animation: slideUp 200ms var(--ease-soft);
 }
 [data-theme="dark"] .glossary-tooltip {
   background: var(--paper-raised);

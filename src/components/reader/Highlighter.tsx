@@ -181,10 +181,10 @@ export function Highlighter({ articleId }: { articleId: string }) {
       {/* selection popover */}
       {popover && (
         <div
-          className="fixed z-50 flex gap-1 rounded-editorial border border-line bg-paper-raised p-1 shadow-md"
+          className="highlight-popover fixed z-50 flex gap-1 rounded-editorial border border-line bg-paper-raised p-1 shadow-md"
           style={{
-            left: popover.x,
-            top: popover.y - 44,
+            left: Math.max(60, Math.min(popover.x, window.innerWidth - 60)),
+            top: Math.max(8, popover.y - 48 + window.scrollY),
             transform: "translateX(-50%)",
           }}
           role="toolbar"
