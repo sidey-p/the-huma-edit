@@ -52,6 +52,8 @@
   --radius-corner: 2px; /* almost square — paper, not app-card */
   --ease-press: cubic-bezier(.16,.9,.28,1);
   --ease-soft: cubic-bezier(.4,0,.2,1);
+  --ease-butter: cubic-bezier(.25,.46,.45,.94);
+  --ease-spring: cubic-bezier(.34,1.56,.64,1);
 
   --dur-fast: 180ms;
   --dur-mid: 420ms;
@@ -1562,6 +1564,11 @@ main#main {
   to { transform: translateY(0); }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* ============================================================
    TL;DR SUMMARY BOX
    ============================================================ */
@@ -1761,8 +1768,18 @@ main#main {
     border-radius: 16px 16px 0 0;
     border-bottom: none;
     box-shadow: 0 -8px 32px -8px rgba(0,0,0,0.3);
-    animation: slideUp 250ms var(--ease-soft);
+    animation: slideUp 350ms var(--ease-butter);
     padding: 1.5rem 1rem calc(1.5rem + env(safe-area-inset-bottom)) 1rem;
+  }
+  /* Backdrop overlay */
+  .appearance-pop::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(4px);
+    z-index: -1;
+    animation: fadeIn 350ms var(--ease-butter);
   }
 }
 
