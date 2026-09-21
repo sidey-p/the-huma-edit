@@ -86,39 +86,42 @@ export function NotificationCenter() {
       </button>
 
       {open && (
-        <div className="notif-panel" role="dialog" aria-label="Notifications">
-          <div className="px-4 py-3 border-b border-line flex items-center justify-between">
-            <p className="meta-line font-medium">Notifications</p>
-            {items.length > 0 && (
-              <button onClick={markAllRead} className="meta-line text-accent">
-                Mark all read
-              </button>
+        <>
+          <div className="appearance-backdrop" onClick={() => setOpen(false)} />
+          <div className="notif-panel" role="dialog" aria-label="Notifications">
+            <div className="px-4 py-3 border-b border-line flex items-center justify-between">
+              <p className="meta-line font-medium">Notifications</p>
+              {items.length > 0 && (
+                <button onClick={markAllRead} className="meta-line text-accent">
+                  Mark all read
+                </button>
+              )}
+            </div>
+            {items.length === 0 ? (
+              <p className="notif-body px-4 py-6 text-center">
+                Quiet for now. New pieces and notes will land here.
+              </p>
+            ) : (
+              items.map((n) => (
+                <Link
+                  key={n.id}
+                  href={n.url ?? "#"}
+                  className={`notif-row ${n.is_read ? "" : "unread"}`}
+                  onClick={() => setOpen(false)}
+                >
+                  <p className="notif-title">{n.title}</p>
+                  {n.body && <p className="notif-body">{n.body}</p>}
+                  <p className="notif-time">
+                    {new Date(n.created_at).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </p>
+                </Link>
+              ))
             )}
           </div>
-          {items.length === 0 ? (
-            <p className="notif-body px-4 py-6 text-center">
-              Quiet for now. New pieces and notes will land here.
-            </p>
-          ) : (
-            items.map((n) => (
-              <Link
-                key={n.id}
-                href={n.url ?? "#"}
-                className={`notif-row ${n.is_read ? "" : "unread"}`}
-                onClick={() => setOpen(false)}
-              >
-                <p className="notif-title">{n.title}</p>
-                {n.body && <p className="notif-body">{n.body}</p>}
-                <p className="notif-time">
-                  {new Date(n.created_at).toLocaleDateString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </p>
-              </Link>
-            ))
-          )}
-        </div>
+        </>
       )}
     </span>
   );

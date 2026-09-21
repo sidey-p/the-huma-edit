@@ -405,15 +405,18 @@ export function MobileNav() {
         )}
       </button>
       {open && (
-        <nav className="primary-nav" data-open="true" aria-label="Mobile">
-          <Link href="/explore" onClick={() => setOpen(false)}>Explore</Link>
-          <Link href="/corners" onClick={() => setOpen(false)}>Corners</Link>
-          <Link href="/paths" onClick={() => setOpen(false)}>Paths</Link>
-          <Link href="/library" onClick={() => setOpen(false)}>Library</Link>
-          <Link href="/archive" onClick={() => setOpen(false)}>Archive</Link>
-          <Link href="/search" onClick={() => setOpen(false)}>Search</Link>
-          <Link href="/settings" onClick={() => setOpen(false)}>Account</Link>
-        </nav>
+        <>
+          <div className="appearance-backdrop" onClick={() => setOpen(false)} />
+          <nav className="primary-nav" data-open="true" aria-label="Mobile">
+            <Link href="/explore" onClick={() => setOpen(false)}>Explore</Link>
+            <Link href="/corners" onClick={() => setOpen(false)}>Corners</Link>
+            <Link href="/paths" onClick={() => setOpen(false)}>Paths</Link>
+            <Link href="/library" onClick={() => setOpen(false)}>Library</Link>
+            <Link href="/archive" onClick={() => setOpen(false)}>Archive</Link>
+            <Link href="/search" onClick={() => setOpen(false)}>Search</Link>
+            <Link href="/settings" onClick={() => setOpen(false)}>Account</Link>
+          </nav>
+        </>
       )}
     </>
   );

@@ -838,10 +838,13 @@ article[data-reading-theme] {
   .hero-grid { grid-template-columns: 1fr; gap: 1.5rem; }
   .hero h1 { font-size: clamp(2rem, 7vw, 3rem); }
   .hero .lede { font-size: var(--step-0); }
-  .hero-ctas { width: 100%; }
-  .hero-ctas .btn { flex: 1; justify-content: center; }
+  .hero-ctas { width: 100%; flex-direction: column; gap: 0.75rem; }
+  .hero-ctas .btn { width: 100%; justify-content: center; padding: 1rem 1.25rem; }
   .hero-side { flex-direction: row; overflow-x: auto; padding-bottom: 0.4rem; -webkit-overflow-scrolling: touch; }
   .ticket { min-width: 180px; }
+
+  /* Buttons: consistent sizing */
+  .btn { width: 100%; justify-content: center; padding: 0.85rem 1.25rem; }
 
   /* Header */
   .masthead .primary-nav { display: none; }
@@ -1380,6 +1383,28 @@ main#main {
   .nav-toggle { display: grid; }
 }
 
+/* Sign-in / sign-up page mobile fixes */
+@media (max-width: 640px) {
+  .mx-auto.max-w-md {
+    max-width: none !important;
+    padding-inline: 1.25rem !important;
+    padding-top: 5rem !important;
+  }
+  .mx-auto.max-w-md .display-lg {
+    font-size: clamp(1.6rem, 6vw, 2.2rem) !important;
+  }
+  .mx-auto.max-w-md button[type="submit"] {
+    padding: 1rem;
+    font-size: 1rem;
+    min-height: 48px;
+  }
+  .mx-auto.max-w-md input {
+    padding: 0.85rem 1rem;
+    font-size: 16px; /* prevents iOS zoom on focus */
+    min-height: 48px;
+  }
+}
+
 @media (max-width: 640px) {
   .highlight-popover {
     left: 50% !important;
@@ -1774,7 +1799,7 @@ main#main {
    ============================================================ */
 
 .appearance-pop {
-  position: absolute; right: 0; z-index: 30; margin-top: 0.5rem;
+  position: absolute; right: 0; z-index: 60; margin-top: 0.5rem;
   width: min(16rem, calc(100vw - 2rem));
   background: var(--paper-raised);
   border: 1px solid var(--rule);
@@ -1806,15 +1831,37 @@ main#main {
     animation: slideUp 350ms var(--ease-butter);
     padding: 1.5rem 1rem calc(1.5rem + env(safe-area-inset-bottom)) 1rem;
   }
-  /* Backdrop overlay */
-  .appearance-pop::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.35);
-    backdrop-filter: blur(4px);
-    z-index: -1;
-    animation: fadeIn 350ms var(--ease-butter);
+}
+
+/* Backdrop overlay — separate from panel so it's clickable */
+.appearance-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(4px);
+  z-index: 29;
+  animation: fadeIn 350ms var(--ease-butter);
+}
+[data-theme="dark"] .appearance-backdrop {
+  background: rgba(0,0,0,0.55);
+}
+
+/* Mobile: bookmark/notification panels as bottom sheets */
+@media (max-width: 640px) {
+  .notif-panel {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: 60vh !important;
+    border-radius: 16px 16px 0 0;
+    border-bottom: none;
+    box-shadow: 0 -8px 32px -8px rgba(0,0,0,0.3);
+    animation: slideUp 350ms var(--ease-butter);
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 

@@ -44,7 +44,7 @@ export function BookmarkMenu() {
     });
   }, []);
 
-  return (
+return (
     <span className="notif-host relative inline-flex" ref={hostRef}>
       <button
         className="icon-btn"
@@ -68,34 +68,37 @@ export function BookmarkMenu() {
       </button>
 
       {open && (
-        <div className="notif-panel" role="dialog" aria-label="Bookmarks">
-          <div className="px-4 py-3 border-b border-line">
-            <p className="meta-line font-medium">Your bookmarks</p>
+        <>
+          <div className="appearance-backdrop" onClick={() => setOpen(false)} />
+          <div className="notif-panel" role="dialog" aria-label="Bookmarks">
+            <div className="px-4 py-3 border-b border-line">
+              <p className="meta-line font-medium">Your bookmarks</p>
+            </div>
+            {items.length === 0 ? (
+              <p className="notif-body px-4 py-6 text-center">
+                Nothing marked yet. The ribbon at the bottom of any article
+                saves your exact line.
+              </p>
+            ) : (
+              items.map((b) => (
+                <Link
+                  key={b.id}
+                  href={`/articles/${b.slug}#resume`}
+                  className="notif-row"
+                  onClick={() => setOpen(false)}
+                >
+                  <p className="notif-title">{b.title}</p>
+                  <p className="notif-time">{b.percent}% through</p>
+                </Link>
+              ))
+            )}
+            <div className="px-4 py-2 border-t border-line">
+              <p className="notif-time">
+                {signedIn ? "Synced to your account" : "Saved on this device"}
+              </p>
+            </div>
           </div>
-          {items.length === 0 ? (
-            <p className="notif-body px-4 py-6 text-center">
-              Nothing marked yet. The ribbon at the bottom of any article
-              saves your exact line.
-            </p>
-          ) : (
-            items.map((b) => (
-              <Link
-                key={b.id}
-                href={`/articles/${b.slug}#resume`}
-                className="notif-row"
-                onClick={() => setOpen(false)}
-              >
-                <p className="notif-title">{b.title}</p>
-                <p className="notif-time">{b.percent}% through</p>
-              </Link>
-            ))
-          )}
-          <div className="px-4 py-2 border-t border-line">
-            <p className="notif-time">
-              {signedIn ? "Synced to your account" : "Saved on this device"}
-            </p>
-          </div>
-        </div>
+        </>
       )}
     </span>
   );

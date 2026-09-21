@@ -81,13 +81,17 @@ export function ReadingControls() {
   // outside-tap close
   useEffect(() => {
     if (!open) return;
-    const onDown = (e: MouseEvent) => {
+    const onDown = (e: MouseEvent | TouchEvent) => {
       if (hostRef.current && !hostRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
     document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
+    document.addEventListener("touchstart", onDown, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("touchstart", onDown);
+    };
   }, [open]);
 
   return (
@@ -113,52 +117,55 @@ export function ReadingControls() {
         Appearance
       </button>
       {open && (
-        <div className="appearance-pop" role="dialog" aria-label="Reading appearance">
-          <fieldset>
-            <legend className="meta-line mb-2 font-medium">Theme</legend>
-            <div className="flex gap-2">
-              {(["light", "warm", "dark"] as Theme[]).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTheme(t)}
-                  aria-pressed={theme === t}
-                  className="flex-1 rounded-editorial-sm border px-2 py-1.5 text-xs capitalize transition-colors"
-                  style={{
-                    borderColor: theme === t ? "var(--accent)" : "var(--line)",
-                    color: theme === t ? "var(--accent)" : "inherit",
-                  }}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-          <fieldset className="mt-4">
-            <legend className="meta-line mb-2 font-medium">Text size</legend>
-            <div className="flex gap-2">
-              {(["s", "m", "l", "xl"] as Size[]).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setSize(s)}
-                  aria-pressed={size === s}
-                  className="flex-1 rounded-editorial-sm border px-2 py-1.5 text-xs transition-colors"
-                  style={{
-                    borderColor: size === s ? "var(--accent)" : "var(--line)",
-                    color: size === s ? "var(--accent)" : "inherit",
-                  }}
-                >
-                  {s === "s"
-                    ? "A"
-                    : s === "m"
-                      ? "A+"
-                      : s === "l"
-                        ? "A++"
-                        : "A+++"}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-        </div>
+        <>
+          <div className="appearance-backdrop" onClick={() => setOpen(false)} />
+          <div className="appearance-pop" role="dialog" aria-label="Reading appearance">
+            <fieldset>
+              <legend className="meta-line mb-2 font-medium">Theme</legend>
+              <div className="flex gap-2">
+                {(["light", "warm", "dark"] as Theme[]).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setTheme(t)}
+                    aria-pressed={theme === t}
+                    className="flex-1 rounded-editorial-sm border px-2 py-1.5 text-xs capitalize transition-colors"
+                    style={{
+                      borderColor: theme === t ? "var(--accent)" : "var(--line)",
+                      color: theme === t ? "var(--accent)" : "inherit",
+                    }}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+            <fieldset className="mt-4">
+              <legend className="meta-line mb-2 font-medium">Text size</legend>
+              <div className="flex gap-2">
+                {(["s", "m", "l", "xl"] as Size[]).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setSize(s)}
+                    aria-pressed={size === s}
+                    className="flex-1 rounded-editorial-sm border px-2 py-1.5 text-xs transition-colors"
+                    style={{
+                      borderColor: size === s ? "var(--accent)" : "var(--line)",
+                      color: size === s ? "var(--accent)" : "inherit",
+                    }}
+                  >
+                    {s === "s"
+                      ? "A"
+                      : s === "m"
+                        ? "A+"
+                        : s === "l"
+                          ? "A++"
+                          : "A+++"}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          </div>
+        </>
       )}
     </div>
   );
